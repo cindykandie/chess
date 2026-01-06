@@ -8,6 +8,8 @@ import TurnIndicator from "./TurnIndicator";
 import type { BoardPiece, Square } from "../lib/chess";
 import { indexToSquare, pieceToUnicode } from "../lib/chess";
 
+type CapturedPiece = Exclude<BoardPiece, null>;
+
 export default function ChessGame() {
   const [game, setGame] = useState(() => new Chess());
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
@@ -21,8 +23,8 @@ export default function ChessGame() {
   } | null>(null);
   const [whiteNameInput, setWhiteNameInput] = useState("");
   const [blackNameInput, setBlackNameInput] = useState("");
-  const [capturedByWhite, setCapturedByWhite] = useState<BoardPiece[]>([]);
-  const [capturedByBlack, setCapturedByBlack] = useState<BoardPiece[]>([]);
+  const [capturedByWhite, setCapturedByWhite] = useState<CapturedPiece[]>([]);
+  const [capturedByBlack, setCapturedByBlack] = useState<CapturedPiece[]>([]);
 
   const board = game.board();
   const whiteName = players?.white || "White";
@@ -86,8 +88,11 @@ export default function ChessGame() {
       if (!move) return;
 
       if (move.captured) {
-        const capturedColor = move.color === "w" ? "b" : "w";
-        const capturedPiece = { type: move.captured, color: capturedColor };
+        const capturedColor: "b" | "w" = move.color === "w" ? "b" : "w";
+        const capturedPiece: CapturedPiece = {
+          type: move.captured,
+          color: capturedColor,
+        };
         if (move.color === "w") {
           setCapturedByWhite((prev) => [...prev, capturedPiece]);
         } else {
