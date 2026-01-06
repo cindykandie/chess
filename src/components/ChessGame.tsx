@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Chess, type Move } from "chess.js";
+import { Chess, type Move, type Square as ChessSquare } from "chess.js";
 
 import ChessBoard from "./ChessBoard";
 import TurnIndicator from "./TurnIndicator";
@@ -34,7 +34,7 @@ export default function ChessGame() {
   }, [game]);
 
   const handleSquareClick = (rowIndex: number, colIndex: number) => {
-    const square = indexToSquare(rowIndex, colIndex);
+    const square = indexToSquare(rowIndex, colIndex) as ChessSquare;
 
     if (game.isGameOver()) return;
 
@@ -67,7 +67,7 @@ export default function ChessGame() {
       setGame((prevGame) => {
         const newGame = new Chess(prevGame.fen());
         const move = newGame.move({
-          from: selectedSquare,
+          from: selectedSquare as ChessSquare,
           to: square,
           promotion: "q",
         });

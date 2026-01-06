@@ -1,5 +1,5 @@
-import type { BoardPiece } from "../lib/chess";
-import { pieceToUnicode } from "../lib/chess";
+
+import { BoardPiece, pieceToUnicode } from "@/lib/chess";
 
 type BoardSquareProps = {
   piece: BoardPiece;
