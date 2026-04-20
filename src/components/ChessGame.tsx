@@ -1,233 +1,173 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Chess, type Move, type Square as ChessSquare } from "chess.js";
 
 import ChessBoard from "./ChessBoard";
+import CapturedPieces from "./CapturedPieces";
 import TurnIndicator from "./TurnIndicator";
-import type { BoardPiece, Square } from "../lib/chess";
-import { indexToSquare, pieceToUnicode } from "../lib/chess";
+import type { Square } from "../lib/chess";
+import { indexToSquare } from "../lib/chess";
 
-type CapturedPiece = Exclude<BoardPiece, null>;
+type ChessGameProps = {
+  whiteName: string;
+  blackName: string;
+  onReturnToSetup: () => void;
+};
 
-export default function ChessGame() {
+const SECONDARY_BTN = [
+  "flex items-center gap-2 rounded-lg border px-4 py-2",
+  "text-sm font-medium transition-all duration-150",
+  "border-slate-700 bg-slate-800/50 text-slate-400",
+  "hover:border-slate-600 hover:bg-slate-800 hover:text-slate-200",
+  "active:scale-[0.97]",
+].join(" ");
+
+export default function ChessGame({ whiteName, blackName, onReturnToSetup }: ChessGameProps) {
   const [game, setGame] = useState(() => new Chess());
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
-  const [legalTargets, setLegalTargets] = useState<Square[]>([]);
-  const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(
-    null
-  );
-  const [players, setPlayers] = useState<{
-    white: string;
-    black: string;
-  } | null>(null);
-  const [whiteNameInput, setWhiteNameInput] = useState("");
-  const [blackNameInput, setBlackNameInput] = useState("");
-  const [capturedByWhite, setCapturedByWhite] = useState<CapturedPiece[]>([]);
-  const [capturedByBlack, setCapturedByBlack] = useState<CapturedPiece[]>([]);
+  const [legalTargets, setLegalTargets] = useState<Set<Square>>(new Set());
+  const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
 
   const board = game.board();
-  const whiteName = players?.white || "White";
-  const blackName = players?.black || "Black";
-  const whiteDisplay = `${whiteName}(white)`;
-  const blackDisplay = `${blackName}(black)`;
 
   const statusText = useMemo(() => {
     if (game.isCheckmate()) {
-      const loser = game.turn() === "w" ? whiteDisplay : blackDisplay;
-      const winner = loser === whiteDisplay ? blackDisplay : whiteDisplay;
-      return `Checkmate! ${winner} wins.`;
+      const [winner, color] =
+        game.turn() === "w"
+          ? [blackName, "black"]
+          : [whiteName, "white"];
+      return `Checkmate — ${winner} (${color}) wins`;
     }
-    if (game.isStalemate()) return "Draw by stalemate.";
-    if (game.isDraw())
-      return "Draw (50-move rule / repetition / insufficient material).";
+    if (game.isStalemate()) return "Draw by stalemate";
+    if (game.isDraw()) return "Draw";
 
-    const turn = game.turn() === "w" ? whiteDisplay : blackDisplay;
-    if (game.inCheck()) return `${turn} to move - in check!`;
-    return `${turn} to move.`;
+    const [side, color] =
+      game.turn() === "w"
+        ? [whiteName, "white"]
+        : [blackName, "black"];
+    if (game.inCheck()) return `${side} (${color}) — in check!`;
+    return `${side} (${color}) to move`;
   }, [game, whiteName, blackName]);
 
-  const handleSquareClick = (rowIndex: number, colIndex: number) => {
-    const square = indexToSquare(rowIndex, colIndex) as ChessSquare;
-
-    if (game.isGameOver()) return;
-
-    const piece = game.get(square);
-    const turnColor = game.turn();
-
-    if (!selectedSquare) {
-      if (!piece || piece.color !== turnColor) return;
-
-      setSelectedSquare(square);
-      const moves = game.moves({ square, verbose: true }) as Move[];
-      setLegalTargets(moves.map((move) => move.to as Square));
-      return;
+  const { capturedByWhite, capturedByBlack } = useMemo(() => {
+    const white: string[] = [];
+    const black: string[] = [];
+    for (const m of game.history({ verbose: true }) as Move[]) {
+      if (m.captured) {
+        if (m.color === "w") white.push(m.captured);
+        else black.push(m.captured);
+      }
     }
+    return { capturedByWhite: white, capturedByBlack: black };
+  }, [game]);
 
-    if (square === selectedSquare) {
-      setSelectedSquare(null);
-      setLegalTargets([]);
-      return;
-    }
+  // chess.js findPiece is O(1) lookup vs the previous 64-square scan
+  const checkSquare = useMemo(
+    () =>
+      game.inCheck()
+        ? (game.findPiece({ type: "k", color: game.turn() })[0] as Square)
+        : null,
+    [game]
+  );
 
-    if (piece && piece.color === turnColor && !legalTargets.includes(square)) {
-      setSelectedSquare(square);
-      const moves = game.moves({ square, verbose: true }) as Move[];
-      setLegalTargets(moves.map((move) => move.to as Square));
-      return;
-    }
+  const handleSquareClick = useCallback(
+    (rowIndex: number, colIndex: number) => {
+      const square = indexToSquare(rowIndex, colIndex) as ChessSquare;
 
-    if (legalTargets.includes(square)) {
-      const newGame = new Chess(game.fen());
-      const move = newGame.move({
-        from: selectedSquare as ChessSquare,
-        to: square,
-        promotion: "q",
-      });
+      if (game.isGameOver()) return;
 
-      if (!move) return;
+      const piece = game.get(square);
+      const turnColor = game.turn();
 
-      if (move.captured) {
-        const capturedColor: "b" | "w" = move.color === "w" ? "b" : "w";
-        const capturedPiece: CapturedPiece = {
-          type: move.captured,
-          color: capturedColor,
-        };
-        if (move.color === "w") {
-          setCapturedByWhite((prev) => [...prev, capturedPiece]);
-        } else {
-          setCapturedByBlack((prev) => [...prev, capturedPiece]);
-        }
+      if (!selectedSquare) {
+        if (!piece || piece.color !== turnColor) return;
+        setSelectedSquare(square);
+        const moves = game.moves({ square, verbose: true }) as Move[];
+        setLegalTargets(new Set(moves.map((m) => m.to as Square)));
+        return;
       }
 
-      setGame(newGame);
-      setLastMove({ from: selectedSquare, to: square });
-      setSelectedSquare(null);
-      setLegalTargets([]);
-      return;
-    }
-  };
+      if (square === selectedSquare) {
+        setSelectedSquare(null);
+        setLegalTargets(new Set());
+        return;
+      }
+
+      if (piece && piece.color === turnColor && !legalTargets.has(square)) {
+        setSelectedSquare(square);
+        const moves = game.moves({ square, verbose: true }) as Move[];
+        setLegalTargets(new Set(moves.map((m) => m.to as Square)));
+        return;
+      }
+
+      if (legalTargets.has(square)) {
+        const newGame = new Chess(game.fen());
+        const move = newGame.move({
+          from: selectedSquare as ChessSquare,
+          to: square,
+          promotion: "q",
+        });
+
+        if (move) {
+          setGame(newGame);
+          setLastMove({ from: selectedSquare, to: square });
+        }
+        setSelectedSquare(null);
+        setLegalTargets(new Set());
+      }
+    },
+    [game, selectedSquare, legalTargets]
+  );
 
   const handleReset = () => {
     setGame(new Chess());
     setSelectedSquare(null);
-    setLegalTargets([]);
+    setLegalTargets(new Set());
     setLastMove(null);
-    setCapturedByWhite([]);
-    setCapturedByBlack([]);
   };
-
-  const handleStart = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const normalizeName = (value: string) =>
-      value
-        .trim()
-        .split(/\s+/)
-        .map((part) =>
-          part ? `${part[0].toUpperCase()}${part.slice(1).toLowerCase()}` : part
-        )
-        .join(" ");
-    const white = normalizeName(whiteNameInput);
-    const black = normalizeName(blackNameInput);
-    if (!white || !black) return;
-    setPlayers({ white, black });
-    setCapturedByWhite([]);
-    setCapturedByBlack([]);
-  };
-
-  if (!players) {
-    return (
-      <div className="flex flex-col items-center gap-6">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-slate-100">NoOrdinary Chess</h1>
-          <p className="text-slate-300 mt-2">White moves first.</p>
-        </div>
-        <form
-          onSubmit={handleStart}
-          className="w-full max-w-sm bg-slate-800/80 border border-slate-700 rounded-lg p-5 shadow-xl"
-        >
-          <label className="block text-sm text-slate-300 mb-2">
-            White player
-          </label>
-          <input
-            value={whiteNameInput}
-            onChange={(event) => setWhiteNameInput(event.target.value)}
-            className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            placeholder="Cindy"
-          />
-          <label className="block text-sm text-slate-300 mt-4 mb-2">
-            Black player
-          </label>
-          <input
-            value={blackNameInput}
-            onChange={(event) => setBlackNameInput(event.target.value)}
-            className="w-full rounded-md bg-slate-900 border border-slate-700 px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            placeholder="Gavin"
-          />
-          <button
-            type="submit"
-            className="mt-5 w-full px-4 py-2 rounded-md bg-emerald-600 text-slate-100 hover:bg-emerald-500"
-          >
-            Start game
-          </button>
-        </form>
-      </div>
-    );
-  }
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <h1 className="text-3xl font-bold text-slate-100">NoOrdinary Chess</h1>
-      <TurnIndicator statusText={statusText} />
-      <div className="flex flex-col md:flex-row items-start gap-6">
+    <div className="flex flex-col items-center gap-6 w-full max-w-[540px]">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-100">
+          No-Ordinary Chess
+        </h1>
+        <p className="mt-1 text-[11px] font-medium tracking-widest uppercase text-slate-500">
+          {whiteName} vs {blackName}
+        </p>
+      </div>
+
+      <TurnIndicator
+        statusText={statusText}
+        turn={game.isGameOver() ? null : game.turn()}
+        isCheck={game.inCheck()}
+      />
+
+      <div className="flex flex-col items-start gap-1 w-full">
+        <CapturedPieces pieces={capturedByBlack} pieceColor="w" name={blackName} />
         <ChessBoard
           board={board}
           selectedSquare={selectedSquare}
           legalTargets={legalTargets}
           lastMove={lastMove}
+          checkSquare={checkSquare}
           onSquareClick={handleSquareClick}
         />
-        <div className="w-full md:w-48 space-y-4 self-stretch">
-          <div className="rounded-lg border border-slate-700 bg-slate-800/80 p-3 text-right">
-            <p className="text-xs uppercase tracking-wide text-slate-400">
-              Captured by {blackName}
-            </p>
-            <div className="mt-2 flex flex-wrap justify-end gap-1 min-h-[2rem] text-2xl">
-              {capturedByBlack.length ? (
-                capturedByBlack.map((piece, index) => (
-                  <span key={`b-${piece.type}-${index}`}>
-                    {pieceToUnicode(piece ?? undefined)}
-                  </span>
-                ))
-              ) : (
-                <span className="text-xs text-slate-500">None yet</span>
-              )}
-            </div>
-          </div>
-          <div className="mt-auto rounded-lg border border-slate-700 bg-slate-800/80 p-3 text-right">
-            <p className="text-xs uppercase tracking-wide text-slate-400">
-              Captured by {whiteName}
-            </p>
-            <div className="mt-2 flex flex-wrap justify-end gap-1 min-h-[2rem] text-2xl">
-              {capturedByWhite.length ? (
-                capturedByWhite.map((piece, index) => (
-                  <span key={`w-${piece.type}-${index}`}>
-                    {pieceToUnicode(piece ?? undefined)}
-                  </span>
-                ))
-              ) : (
-                <span className="text-xs text-slate-500">None yet</span>
-              )}
-            </div>
-          </div>
-        </div>
+        <CapturedPieces pieces={capturedByWhite} pieceColor="b" name={whiteName} />
       </div>
-      <button
-        onClick={handleReset}
-        className="mt-2 px-4 py-2 rounded-md bg-slate-700 text-slate-100 hover:bg-slate-600 text-sm"
-      >
-        Reset game
-      </button>
+
+      <div className="flex items-center gap-3">
+        <button onClick={handleReset} className={SECONDARY_BTN}>
+          <span className="text-base leading-none" aria-hidden>↺</span>
+          New Game
+        </button>
+
+        <button onClick={onReturnToSetup} className={SECONDARY_BTN}>
+          <span className="text-base leading-none" aria-hidden>←</span>
+          Change Players
+        </button>
+      </div>
     </div>
   );
 }

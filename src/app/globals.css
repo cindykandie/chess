@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0f172a;
+  --foreground: #f1f5f9;
 }
 
 @theme inline {
@@ -12,15 +12,46 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Subtle emerald tint on text selection to stay on-theme */
+::selection {
+  background: rgba(52, 211, 153, 0.18);
+  color: inherit;
+}
+
+/*
+ * piece-enter
+ * Plays when a piece span mounts on a square — either a move destination
+ * or a capture (where the pieceChar key changes, forcing a remount).
+ * Spring easing with ~8% overshoot gives a physical "settle" feeling.
+ */
+@keyframes piece-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.72) translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/*
+ * dot-enter
+ * Legal-move dots expand from the center of the square.
+ * Faster than piece-enter so hints appear instantly on selection.
+ */
+@keyframes dot-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.25);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
