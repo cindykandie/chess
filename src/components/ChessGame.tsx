@@ -275,7 +275,6 @@ export default function ChessGame({
       <TurnIndicator
         statusText={statusText}
         turn={isGameOver ? null : game.turn()}
-        turn={isGameOver ? null : game.turn()}
         isCheck={game.inCheck()}
       />
 
