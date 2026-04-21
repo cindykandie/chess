@@ -1,19 +1,23 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
-import { Chess, type Move, type Square as ChessSquare } from "chess.js";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { Chess, type Move } from "chess.js";
+import type { Key } from "chessground/types";
 
-import ChessBoard from "./ChessBoard";
+import ChessgroundBoard from "./ChessgroundBoard";
 import CapturedPieces from "./CapturedPieces";
 import TurnIndicator from "./TurnIndicator";
-import type { Square } from "../lib/chess";
-import { indexToSquare } from "../lib/chess";
+import type { BoardTheme } from "@/lib/themes";
 
 type ChessGameProps = {
   whiteName: string;
   blackName: string;
   onReturnToSetup: () => void;
+  theme?: BoardTheme;
 };
+
+// Minimal move record — enough to replay the full game from scratch.
+type StoredMove = { from: string; to: string; promotion?: string };
 
 const SECONDARY_BTN = [
   "flex items-center gap-2 rounded-lg border px-4 py-2",
@@ -23,29 +27,46 @@ const SECONDARY_BTN = [
   "active:scale-[0.97]",
 ].join(" ");
 
-export default function ChessGame({ whiteName, blackName, onReturnToSetup }: ChessGameProps) {
-  const [game, setGame] = useState(() => new Chess());
-  const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
-  const [legalTargets, setLegalTargets] = useState<Set<Square>>(new Set());
-  const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
+function getDests(game: Chess): Map<Key, Key[]> {
+  const dests = new Map<Key, Key[]>();
+  for (const { from, to } of game.moves({ verbose: true }) as Move[]) {
+    const targets = dests.get(from as Key);
+    if (targets) targets.push(to as Key);
+    else dests.set(from as Key, [to as Key]);
+  }
+  return dests;
+}
 
-  const board = game.board();
+export default function ChessGame({ whiteName, blackName, onReturnToSetup, theme }: ChessGameProps) {
+  // Source of truth: the ordered list of moves played.
+  // Replaying from scratch preserves full history for draw detection
+  // (threefold repetition, 50-move rule) — cloning via FEN loses this.
+  const [moves, setMoves] = useState<StoredMove[]>([]);
+  const [lastMove, setLastMove] = useState<[Key, Key] | undefined>(undefined);
+
+  const game = useMemo(() => {
+    const g = new Chess();
+    for (const m of moves) g.move(m);
+    return g;
+  }, [moves]);
+
+  // Ref keeps onMove stable forever — no callback churn, no extra cg.set() calls.
+  const gameRef = useRef(game);
+  gameRef.current = game;
+
+  const isGameOver = game.isGameOver();
+  const turnColor = game.turn() === "w" ? "white" : "black";
 
   const statusText = useMemo(() => {
     if (game.isCheckmate()) {
       const [winner, color] =
-        game.turn() === "w"
-          ? [blackName, "black"]
-          : [whiteName, "white"];
+        game.turn() === "w" ? [blackName, "black"] : [whiteName, "white"];
       return `Checkmate — ${winner} (${color}) wins`;
     }
     if (game.isStalemate()) return "Draw by stalemate";
     if (game.isDraw()) return "Draw";
-
     const [side, color] =
-      game.turn() === "w"
-        ? [whiteName, "white"]
-        : [blackName, "black"];
+      game.turn() === "w" ? [whiteName, "white"] : [blackName, "black"];
     if (game.inCheck()) return `${side} (${color}) — in check!`;
     return `${side} (${color}) to move`;
   }, [game, whiteName, blackName]);
@@ -62,70 +83,30 @@ export default function ChessGame({ whiteName, blackName, onReturnToSetup }: Che
     return { capturedByWhite: white, capturedByBlack: black };
   }, [game]);
 
-  // chess.js findPiece is O(1) lookup vs the previous 64-square scan
-  const checkSquare = useMemo(
-    () =>
-      game.inCheck()
-        ? (game.findPiece({ type: "k", color: game.turn() })[0] as Square)
-        : null,
-    [game]
+  const dests = useMemo(
+    () => (isGameOver ? new Map<Key, Key[]>() : getDests(game)),
+    [game, isGameOver]
   );
 
-  const handleSquareClick = useCallback(
-    (rowIndex: number, colIndex: number) => {
-      const square = indexToSquare(rowIndex, colIndex) as ChessSquare;
+  // Stable for the lifetime of the component — gameRef always points at latest game.
+  const onMove = useCallback((from: Key, to: Key) => {
+    const current = gameRef.current;
+    if (current.isGameOver()) return;
 
-      if (game.isGameOver()) return;
+    // Validate against the current position. Since dests are built from chess.js,
+    // this should always succeed — the check is purely defensive.
+    const probe = new Chess(current.fen());
+    const m = probe.move({ from, to, promotion: "q" });
+    if (!m) return;
 
-      const piece = game.get(square);
-      const turnColor = game.turn();
+    setMoves(prev => [...prev, { from: m.from, to: m.to, promotion: m.promotion }]);
+    setLastMove([from, to]);
+  }, []);
 
-      if (!selectedSquare) {
-        if (!piece || piece.color !== turnColor) return;
-        setSelectedSquare(square);
-        const moves = game.moves({ square, verbose: true }) as Move[];
-        setLegalTargets(new Set(moves.map((m) => m.to as Square)));
-        return;
-      }
-
-      if (square === selectedSquare) {
-        setSelectedSquare(null);
-        setLegalTargets(new Set());
-        return;
-      }
-
-      if (piece && piece.color === turnColor && !legalTargets.has(square)) {
-        setSelectedSquare(square);
-        const moves = game.moves({ square, verbose: true }) as Move[];
-        setLegalTargets(new Set(moves.map((m) => m.to as Square)));
-        return;
-      }
-
-      if (legalTargets.has(square)) {
-        const newGame = new Chess(game.fen());
-        const move = newGame.move({
-          from: selectedSquare as ChessSquare,
-          to: square,
-          promotion: "q",
-        });
-
-        if (move) {
-          setGame(newGame);
-          setLastMove({ from: selectedSquare, to: square });
-        }
-        setSelectedSquare(null);
-        setLegalTargets(new Set());
-      }
-    },
-    [game, selectedSquare, legalTargets]
-  );
-
-  const handleReset = () => {
-    setGame(new Chess());
-    setSelectedSquare(null);
-    setLegalTargets(new Set());
-    setLastMove(null);
-  };
+  const handleReset = useCallback(() => {
+    setMoves([]);
+    setLastMove(undefined);
+  }, []);
 
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-[540px]">
@@ -140,19 +121,20 @@ export default function ChessGame({ whiteName, blackName, onReturnToSetup }: Che
 
       <TurnIndicator
         statusText={statusText}
-        turn={game.isGameOver() ? null : game.turn()}
+        turn={isGameOver ? null : game.turn()}
         isCheck={game.inCheck()}
       />
 
       <div className="flex flex-col items-start gap-1 w-full">
         <CapturedPieces pieces={capturedByBlack} pieceColor="w" name={blackName} />
-        <ChessBoard
-          board={board}
-          selectedSquare={selectedSquare}
-          legalTargets={legalTargets}
+        <ChessgroundBoard
+          fen={game.fen()}
+          turnColor={turnColor}
+          dests={dests}
           lastMove={lastMove}
-          checkSquare={checkSquare}
-          onSquareClick={handleSquareClick}
+          check={game.inCheck()}
+          onMove={onMove}
+          theme={theme}
         />
         <CapturedPieces pieces={capturedByWhite} pieceColor="b" name={whiteName} />
       </div>
@@ -162,7 +144,6 @@ export default function ChessGame({ whiteName, blackName, onReturnToSetup }: Che
           <span className="text-base leading-none" aria-hidden>↺</span>
           New Game
         </button>
-
         <button onClick={onReturnToSetup} className={SECONDARY_BTN}>
           <span className="text-base leading-none" aria-hidden>←</span>
           Change Players
