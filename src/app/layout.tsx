@@ -17,6 +17,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "NoOrdinary Chess",
   description: "A two-player chess game",
+  icons: {
+    icon: [{ url: "/queen.svg", type: "image/svg+xml" }],
+    shortcut: ["/queen.svg"],
+  },
 };
 
 export default function RootLayout({

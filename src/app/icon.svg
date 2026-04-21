@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 112" fill="none">
+  <defs>
+    <linearGradient id="body" x1="20" y1="0" x2="80" y2="112" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6ee7b7"/>
+      <stop offset="100%" stop-color="#065f46"/>
+    </linearGradient>
+    <linearGradient id="ball" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#a7f3d0"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+    <linearGradient id="base" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Crown orbs -->
+  <circle cx="14" cy="17" r="9.5" fill="url(#ball)"/>
+  <circle cx="50" cy="9"  r="9.5" fill="url(#ball)"/>
+  <circle cx="86" cy="17" r="9.5" fill="url(#ball)"/>
+
+  <!-- Crown + body: zigzag crown merges into tapered body -->
+  <path d="
+    M 4 28
+    L 14 26
+    L 32 37
+    L 50 26
+    L 68 37
+    L 86 26
+    L 96 28
+    L 84 65
+    Q 80 78 50 80
+    Q 20 78 16 65
+    Z
+  " fill="url(#body)"/>
+
+  <!-- Neck ring -->
+  <rect x="29" y="80" width="42" height="7" rx="3.5" fill="url(#base)"/>
+
+  <!-- Base tier 1 -->
+  <rect x="15" y="87" width="70" height="11" rx="4" fill="url(#body)"/>
+
+  <!-- Base tier 2 (foot) -->
+  <rect x="6" y="98" width="88" height="13" rx="5" fill="url(#base)"/>
+
+  <!-- Subtle highlight on body -->
+  <ellipse cx="38" cy="55" rx="9" ry="7" fill="#a7f3d0" opacity="0.15"/>
+</svg>

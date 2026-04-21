@@ -1,23 +1,36 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Chess, type Move } from "chess.js";
 import type { Key } from "chessground/types";
 
 import ChessgroundBoard from "./ChessgroundBoard";
 import CapturedPieces from "./CapturedPieces";
 import TurnIndicator from "./TurnIndicator";
+import WinnerModal from "./WinnerModal";
+import PromotionModal, { type PromotionPiece } from "./PromotionModal";
 import type { BoardTheme } from "@/lib/themes";
+import type { PieceStyle } from "@/lib/pieceStyles";
+import type { GameRecord } from "@/lib/storage";
 
 type ChessGameProps = {
   whiteName: string;
   blackName: string;
   onReturnToSetup: () => void;
   theme?: BoardTheme;
+  pieceStyle?: PieceStyle;
+  onGameRecord: (record: Omit<GameRecord, "id" | "playedAt">) => void;
 };
 
-// Minimal move record — enough to replay the full game from scratch.
 type StoredMove = { from: string; to: string; promotion?: string };
+type PendingPromotion = {
+  from: Key;
+  to: Key;
+  color: "w" | "b";
+  choices: PromotionPiece[];
+};
+
+const PROMOTION_ORDER: PromotionPiece[] = ["q", "r", "b", "n"];
 
 const SECONDARY_BTN = [
   "flex items-center gap-2 rounded-lg border px-4 py-2",
@@ -37,12 +50,41 @@ function getDests(game: Chess): Map<Key, Key[]> {
   return dests;
 }
 
-export default function ChessGame({ whiteName, blackName, onReturnToSetup, theme }: ChessGameProps) {
-  // Source of truth: the ordered list of moves played.
-  // Replaying from scratch preserves full history for draw detection
-  // (threefold repetition, 50-move rule) — cloning via FEN loses this.
+function getPromotionChoices(
+  game: Chess,
+  from: Key,
+  to: Key
+): PendingPromotion | null {
+  const promotionMoves = (game.moves({ verbose: true }) as Move[]).filter(
+    (move) => move.from === from && move.to === to && move.promotion
+  );
+
+  if (promotionMoves.length === 0) return null;
+
+  const legalChoices = new Set(
+    promotionMoves.map((move) => move.promotion as PromotionPiece)
+  );
+
+  return {
+    from,
+    to,
+    color: promotionMoves[0].color,
+    choices: PROMOTION_ORDER.filter((piece) => legalChoices.has(piece)),
+  };
+}
+
+export default function ChessGame({
+  whiteName,
+  blackName,
+  onReturnToSetup,
+  theme,
+  pieceStyle,
+  onGameRecord,
+}: ChessGameProps) {
   const [moves, setMoves] = useState<StoredMove[]>([]);
   const [lastMove, setLastMove] = useState<[Key, Key] | undefined>(undefined);
+  const [pendingPromotion, setPendingPromotion] =
+    useState<PendingPromotion | null>(null);
 
   const game = useMemo(() => {
     const g = new Chess();
@@ -50,12 +92,23 @@ export default function ChessGame({ whiteName, blackName, onReturnToSetup, theme
     return g;
   }, [moves]);
 
-  // Ref keeps onMove stable forever — no callback churn, no extra cg.set() calls.
   const gameRef = useRef(game);
-  gameRef.current = game;
+
+  useEffect(() => {
+    gameRef.current = game;
+  }, [game]);
+
+  // Tracks whether the current game has already been recorded to prevent double-recording
+  // when game over is detected AND the user then clicks "New Game".
+  const recordedRef = useRef(false);
 
   const isGameOver = game.isGameOver();
   const turnColor = game.turn() === "w" ? "white" : "black";
+  const winner = game.isCheckmate()
+    ? game.turn() === "w"
+      ? { color: "black" as const, name: blackName }
+      : { color: "white" as const, name: whiteName }
+    : null;
 
   const statusText = useMemo(() => {
     if (game.isCheckmate()) {
@@ -66,6 +119,7 @@ export default function ChessGame({ whiteName, blackName, onReturnToSetup, theme
     if (game.isStalemate()) return "Draw by stalemate";
     if (game.isDraw()) return "Draw";
     const [side, color] =
+      game.turn() === "w" ? [whiteName, "white"] : [blackName, "black"];
       game.turn() === "w" ? [whiteName, "white"] : [blackName, "black"];
     if (game.inCheck()) return `${side} (${color}) — in check!`;
     return `${side} (${color}) to move`;
@@ -88,28 +142,127 @@ export default function ChessGame({ whiteName, blackName, onReturnToSetup, theme
     [game, isGameOver]
   );
 
-  // Stable for the lifetime of the component — gameRef always points at latest game.
+  // Record completed games automatically.
+  useEffect(() => {
+    if (!isGameOver || recordedRef.current) return;
+    recordedRef.current = true;
+
+    let result: GameRecord["result"];
+    let termination: GameRecord["termination"];
+
+    if (game.isCheckmate()) {
+      result = game.turn() === "w" ? "black" : "white";
+      termination = "checkmate";
+    } else if (game.isStalemate()) {
+      result = "draw";
+      termination = "stalemate";
+    } else {
+      result = "draw";
+      termination = "draw";
+    }
+
+    onGameRecord({
+      white: whiteName,
+      black: blackName,
+      result,
+      termination,
+      moves: moves.length,
+      complete: true,
+    });
+  }, [blackName, game, isGameOver, moves.length, onGameRecord, whiteName]);
+
   const onMove = useCallback((from: Key, to: Key) => {
     const current = gameRef.current;
     if (current.isGameOver()) return;
-
-    // Validate against the current position. Since dests are built from chess.js,
-    // this should always succeed — the check is purely defensive.
+    const promotion = getPromotionChoices(current, from, to);
+    if (promotion) {
+      setPendingPromotion(promotion);
+      return;
+    }
     const probe = new Chess(current.fen());
-    const m = probe.move({ from, to, promotion: "q" });
+    const m = probe.move({ from, to });
     if (!m) return;
-
-    setMoves(prev => [...prev, { from: m.from, to: m.to, promotion: m.promotion }]);
+    setMoves((prev) => [
+      ...prev,
+      { from: m.from, to: m.to, promotion: m.promotion },
+    ]);
     setLastMove([from, to]);
   }, []);
 
+  const handlePromotionSelect = useCallback(
+    (piece: PromotionPiece) => {
+      const pending = pendingPromotion;
+      if (!pending) return;
+
+      const current = gameRef.current;
+      const probe = new Chess(current.fen());
+      const move = probe.move({
+        from: pending.from,
+        to: pending.to,
+        promotion: piece,
+      });
+
+      if (!move) {
+        setPendingPromotion(null);
+        return;
+      }
+
+      setMoves((prev) => [
+        ...prev,
+        { from: move.from, to: move.to, promotion: move.promotion },
+      ]);
+      setLastMove([pending.from, pending.to]);
+      setPendingPromotion(null);
+    },
+    [pendingPromotion]
+  );
+
+  const recordAbandoned = useCallback(() => {
+    if (moves.length > 0 && !isGameOver && !recordedRef.current) {
+      recordedRef.current = true;
+      onGameRecord({
+        white: whiteName,
+        black: blackName,
+        result: null,
+        termination: "abandoned",
+        moves: moves.length,
+        complete: false,
+      });
+    }
+  }, [blackName, isGameOver, moves.length, onGameRecord, whiteName]);
+
   const handleReset = useCallback(() => {
+    recordAbandoned();
+    recordedRef.current = false;
+    setPendingPromotion(null);
     setMoves([]);
     setLastMove(undefined);
-  }, []);
+  }, [recordAbandoned]);
+
+  const handleReturnToSetup = useCallback(() => {
+    recordAbandoned();
+    onReturnToSetup();
+  }, [onReturnToSetup, recordAbandoned]);
 
   return (
-    <div className="flex flex-col items-center gap-6 w-full max-w-[540px]">
+    <div className="flex w-full max-w-[540px] flex-col items-center gap-6">
+      {pendingPromotion && (
+        <PromotionModal
+          color={pendingPromotion.color}
+          choices={pendingPromotion.choices}
+          onSelect={handlePromotionSelect}
+        />
+      )}
+
+      {winner && (
+        <WinnerModal
+          winnerColor={winner.color}
+          winnerName={winner.name}
+          onNewGame={handleReset}
+          onChangePlayers={handleReturnToSetup}
+        />
+      )}
+
       <div className="text-center">
         <h1 className="text-2xl font-bold tracking-tight text-slate-100">
           No-Ordinary Chess
@@ -125,8 +278,12 @@ export default function ChessGame({ whiteName, blackName, onReturnToSetup, theme
         isCheck={game.inCheck()}
       />
 
-      <div className="flex flex-col items-start gap-1 w-full">
-        <CapturedPieces pieces={capturedByBlack} pieceColor="w" name={blackName} />
+      <div className="flex w-full flex-col items-start gap-1">
+        <CapturedPieces
+          pieces={capturedByBlack}
+          pieceColor="w"
+          name={blackName}
+        />
         <ChessgroundBoard
           fen={game.fen()}
           turnColor={turnColor}
@@ -135,16 +292,22 @@ export default function ChessGame({ whiteName, blackName, onReturnToSetup, theme
           check={game.inCheck()}
           onMove={onMove}
           theme={theme}
+          pieceStyle={pieceStyle}
+          disabled={Boolean(pendingPromotion)}
         />
-        <CapturedPieces pieces={capturedByWhite} pieceColor="b" name={whiteName} />
+        <CapturedPieces
+          pieces={capturedByWhite}
+          pieceColor="b"
+          name={whiteName}
+        />
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-center gap-3">
         <button onClick={handleReset} className={SECONDARY_BTN}>
           <span className="text-base leading-none" aria-hidden>↺</span>
           New Game
         </button>
-        <button onClick={onReturnToSetup} className={SECONDARY_BTN}>
+        <button onClick={handleReturnToSetup} className={SECONDARY_BTN}>
           <span className="text-base leading-none" aria-hidden>←</span>
           Change Players
         </button>
