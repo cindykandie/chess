@@ -1,22 +1,26 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Chess, type Move } from "chess.js";
 import type { Key } from "chessground/types";
 
 import ChessgroundBoard from "./ChessgroundBoard";
 import CapturedPieces from "./CapturedPieces";
 import TurnIndicator from "./TurnIndicator";
+import WinnerModal from "./WinnerModal";
 import type { BoardTheme } from "@/lib/themes";
+import type { PieceStyle } from "@/lib/pieceStyles";
+import type { GameRecord } from "@/lib/storage";
 
 type ChessGameProps = {
   whiteName: string;
   blackName: string;
   onReturnToSetup: () => void;
   theme?: BoardTheme;
+  pieceStyle?: PieceStyle;
+  onGameRecord: (record: Omit<GameRecord, "id" | "playedAt">) => void;
 };
 
-// Minimal move record — enough to replay the full game from scratch.
 type StoredMove = { from: string; to: string; promotion?: string };
 
 const SECONDARY_BTN = [
@@ -37,10 +41,14 @@ function getDests(game: Chess): Map<Key, Key[]> {
   return dests;
 }
 
-export default function ChessGame({ whiteName, blackName, onReturnToSetup, theme }: ChessGameProps) {
-  // Source of truth: the ordered list of moves played.
-  // Replaying from scratch preserves full history for draw detection
-  // (threefold repetition, 50-move rule) — cloning via FEN loses this.
+export default function ChessGame({
+  whiteName,
+  blackName,
+  onReturnToSetup,
+  theme,
+  pieceStyle,
+  onGameRecord,
+}: ChessGameProps) {
   const [moves, setMoves] = useState<StoredMove[]>([]);
   const [lastMove, setLastMove] = useState<[Key, Key] | undefined>(undefined);
 
@@ -50,12 +58,20 @@ export default function ChessGame({ whiteName, blackName, onReturnToSetup, theme
     return g;
   }, [moves]);
 
-  // Ref keeps onMove stable forever — no callback churn, no extra cg.set() calls.
   const gameRef = useRef(game);
   gameRef.current = game;
 
+  // Tracks whether the current game has already been recorded to prevent double-recording
+  // when game over is detected AND the user then clicks "New Game".
+  const recordedRef = useRef(false);
+
   const isGameOver = game.isGameOver();
   const turnColor = game.turn() === "w" ? "white" : "black";
+  const winner = game.isCheckmate()
+    ? game.turn() === "w"
+      ? { color: "black" as const, name: blackName }
+      : { color: "white" as const, name: whiteName }
+    : null;
 
   const statusText = useMemo(() => {
     if (game.isCheckmate()) {
@@ -88,28 +104,76 @@ export default function ChessGame({ whiteName, blackName, onReturnToSetup, theme
     [game, isGameOver]
   );
 
-  // Stable for the lifetime of the component — gameRef always points at latest game.
+  // Record completed games automatically.
+  useEffect(() => {
+    if (!isGameOver || recordedRef.current) return;
+    recordedRef.current = true;
+
+    let result: GameRecord["result"];
+    let termination: GameRecord["termination"];
+
+    if (game.isCheckmate()) {
+      result = game.turn() === "w" ? "black" : "white";
+      termination = "checkmate";
+    } else if (game.isStalemate()) {
+      result = "draw";
+      termination = "stalemate";
+    } else {
+      result = "draw";
+      termination = "draw";
+    }
+
+    onGameRecord({ white: whiteName, black: blackName, result, termination, moves: moves.length, complete: true });
+  }, [isGameOver]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const onMove = useCallback((from: Key, to: Key) => {
     const current = gameRef.current;
     if (current.isGameOver()) return;
-
-    // Validate against the current position. Since dests are built from chess.js,
-    // this should always succeed — the check is purely defensive.
     const probe = new Chess(current.fen());
     const m = probe.move({ from, to, promotion: "q" });
     if (!m) return;
-
-    setMoves(prev => [...prev, { from: m.from, to: m.to, promotion: m.promotion }]);
+    setMoves((prev) => [...prev, { from: m.from, to: m.to, promotion: m.promotion }]);
     setLastMove([from, to]);
   }, []);
 
+  function recordAbandoned() {
+    if (moves.length > 0 && !isGameOver && !recordedRef.current) {
+      recordedRef.current = true;
+      onGameRecord({
+        white: whiteName,
+        black: blackName,
+        result: null,
+        termination: "abandoned",
+        moves: moves.length,
+        complete: false,
+      });
+    }
+  }
+
   const handleReset = useCallback(() => {
+    recordAbandoned();
+    recordedRef.current = false;
     setMoves([]);
     setLastMove(undefined);
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moves.length, isGameOver]);
+
+  function handleReturnToSetup() {
+    recordAbandoned();
+    onReturnToSetup();
+  }
 
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-[540px]">
+      {winner && (
+        <WinnerModal
+          winnerColor={winner.color}
+          winnerName={winner.name}
+          onNewGame={handleReset}
+          onChangePlayers={handleReturnToSetup}
+        />
+      )}
+
       <div className="text-center">
         <h1 className="text-2xl font-bold tracking-tight text-slate-100">
           No-Ordinary Chess
@@ -135,6 +199,7 @@ export default function ChessGame({ whiteName, blackName, onReturnToSetup, theme
           check={game.inCheck()}
           onMove={onMove}
           theme={theme}
+          pieceStyle={pieceStyle}
         />
         <CapturedPieces pieces={capturedByWhite} pieceColor="b" name={whiteName} />
       </div>
@@ -144,7 +209,7 @@ export default function ChessGame({ whiteName, blackName, onReturnToSetup, theme
           <span className="text-base leading-none" aria-hidden>↺</span>
           New Game
         </button>
-        <button onClick={onReturnToSetup} className={SECONDARY_BTN}>
+        <button onClick={handleReturnToSetup} className={SECONDARY_BTN}>
           <span className="text-base leading-none" aria-hidden>←</span>
           Change Players
         </button>

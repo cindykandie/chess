@@ -22,6 +22,96 @@ body {
   color: inherit;
 }
 
+.winner-confetti {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.winner-confetti span {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  width: 9px;
+  height: 16px;
+  border-radius: 2px;
+  background: #34d399;
+  opacity: 0;
+  animation: winner-confetti-fall 3.2s ease-out infinite;
+}
+
+.winner-confetti span:nth-child(4n) {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #facc15;
+}
+
+.winner-confetti span:nth-child(4n + 1) {
+  background: #38bdf8;
+}
+
+.winner-confetti span:nth-child(4n + 2) {
+  background: #f472b6;
+}
+
+.winner-confetti span:nth-child(4n + 3) {
+  background: #a7f3d0;
+}
+
+.winner-confetti span:nth-child(1) { left: 3%; animation-delay: 0s; animation-duration: 2.7s; }
+.winner-confetti span:nth-child(2) { left: 8%; animation-delay: 0.3s; animation-duration: 3.4s; }
+.winner-confetti span:nth-child(3) { left: 12%; animation-delay: 0.9s; animation-duration: 2.9s; }
+.winner-confetti span:nth-child(4) { left: 17%; animation-delay: 0.1s; animation-duration: 3.1s; }
+.winner-confetti span:nth-child(5) { left: 21%; animation-delay: 0.7s; animation-duration: 3.6s; }
+.winner-confetti span:nth-child(6) { left: 26%; animation-delay: 0.2s; animation-duration: 2.8s; }
+.winner-confetti span:nth-child(7) { left: 31%; animation-delay: 1s; animation-duration: 3.5s; }
+.winner-confetti span:nth-child(8) { left: 35%; animation-delay: 0.5s; animation-duration: 3s; }
+.winner-confetti span:nth-child(9) { left: 40%; animation-delay: 0.1s; animation-duration: 3.7s; }
+.winner-confetti span:nth-child(10) { left: 44%; animation-delay: 0.8s; animation-duration: 2.6s; }
+.winner-confetti span:nth-child(11) { left: 49%; animation-delay: 0.4s; animation-duration: 3.2s; }
+.winner-confetti span:nth-child(12) { left: 53%; animation-delay: 1.1s; animation-duration: 3.8s; }
+.winner-confetti span:nth-child(13) { left: 58%; animation-delay: 0.2s; animation-duration: 2.9s; }
+.winner-confetti span:nth-child(14) { left: 62%; animation-delay: 0.6s; animation-duration: 3.4s; }
+.winner-confetti span:nth-child(15) { left: 67%; animation-delay: 0s; animation-duration: 2.7s; }
+.winner-confetti span:nth-child(16) { left: 71%; animation-delay: 0.9s; animation-duration: 3.5s; }
+.winner-confetti span:nth-child(17) { left: 76%; animation-delay: 0.3s; animation-duration: 3s; }
+.winner-confetti span:nth-child(18) { left: 81%; animation-delay: 0.7s; animation-duration: 3.7s; }
+.winner-confetti span:nth-child(19) { left: 85%; animation-delay: 0.1s; animation-duration: 3.1s; }
+.winner-confetti span:nth-child(20) { left: 90%; animation-delay: 1s; animation-duration: 3.6s; }
+.winner-confetti span:nth-child(21) { left: 95%; animation-delay: 0.5s; animation-duration: 2.8s; }
+.winner-confetti span:nth-child(22) { left: 6%; animation-delay: 1.2s; animation-duration: 3.2s; }
+.winner-confetti span:nth-child(23) { left: 15%; animation-delay: 1.4s; animation-duration: 2.9s; }
+.winner-confetti span:nth-child(24) { left: 24%; animation-delay: 1.1s; animation-duration: 3.5s; }
+.winner-confetti span:nth-child(25) { left: 33%; animation-delay: 1.6s; animation-duration: 3.1s; }
+.winner-confetti span:nth-child(26) { left: 42%; animation-delay: 1.3s; animation-duration: 3.8s; }
+.winner-confetti span:nth-child(27) { left: 51%; animation-delay: 1.5s; animation-duration: 2.7s; }
+.winner-confetti span:nth-child(28) { left: 60%; animation-delay: 1.2s; animation-duration: 3.4s; }
+.winner-confetti span:nth-child(29) { left: 69%; animation-delay: 1.7s; animation-duration: 3s; }
+.winner-confetti span:nth-child(30) { left: 78%; animation-delay: 1.4s; animation-duration: 3.6s; }
+.winner-confetti span:nth-child(31) { left: 87%; animation-delay: 1.8s; animation-duration: 2.8s; }
+.winner-confetti span:nth-child(32) { left: 97%; animation-delay: 1.3s; animation-duration: 3.3s; }
+.winner-confetti span:nth-child(33) { left: 19%; animation-delay: 2s; animation-duration: 3.7s; }
+.winner-confetti span:nth-child(34) { left: 47%; animation-delay: 1.9s; animation-duration: 3.1s; }
+.winner-confetti span:nth-child(35) { left: 73%; animation-delay: 2.1s; animation-duration: 2.9s; }
+.winner-confetti span:nth-child(36) { left: 92%; animation-delay: 1.8s; animation-duration: 3.5s; }
+
+@keyframes winner-confetti-fall {
+  0% {
+    opacity: 0;
+    transform: translate3d(-30px, 0, 0) rotate(0deg);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(30px, 100vh, 0) rotate(720deg);
+  }
+}
+
 /* ─────────────────────────────────────────────────────────────
    Chessground — emerald board theme
    ───────────────────────────────────────────────────────────── */
@@ -125,18 +215,54 @@ cg-board square.check {
  * can't override the color.
  */
 
-/* White pieces — transparent glyph, white shadow fill + dark outline */
-.cg-wrap piece.pawn.white::before   { content: "♟"; font-size: 8cqi; color: transparent; text-shadow: 0 0 0 #f1f5f9, 1px 0 0 #1e293b, -1px 0 0 #1e293b, 0 1px 0 #1e293b, 0 -1px 0 #1e293b; }
-.cg-wrap piece.rook.white::before   { content: "♜"; color: transparent; text-shadow: 0 0 0 #f1f5f9, 1px 0 0 #1e293b, -1px 0 0 #1e293b, 0 1px 0 #1e293b, 0 -1px 0 #1e293b; }
-.cg-wrap piece.knight.white::before { content: "♞"; color: transparent; text-shadow: 0 0 0 #f1f5f9, 1px 0 0 #1e293b, -1px 0 0 #1e293b, 0 1px 0 #1e293b, 0 -1px 0 #1e293b; }
-.cg-wrap piece.bishop.white::before { content: "♝"; color: transparent; text-shadow: 0 0 0 #f1f5f9, 1px 0 0 #1e293b, -1px 0 0 #1e293b, 0 1px 0 #1e293b, 0 -1px 0 #1e293b; }
-.cg-wrap piece.queen.white::before  { content: "♛"; color: transparent; text-shadow: 0 0 0 #f1f5f9, 1px 0 0 #1e293b, -1px 0 0 #1e293b, 0 1px 0 #1e293b, 0 -1px 0 #1e293b; }
-.cg-wrap piece.king.white::before   { content: "♚"; color: transparent; text-shadow: 0 0 0 #f1f5f9, 1px 0 0 #1e293b, -1px 0 0 #1e293b, 0 1px 0 #1e293b, 0 -1px 0 #1e293b; }
+/*
+ * Piece glyphs: content + pawn size are set once.
+ * Color is applied via a zero-offset text-shadow (bypasses macOS emoji rendering).
+ * The active style is determined by [data-piece-style] on the board wrapper —
+ * the attribute selector beats the base class rules by one specificity point,
+ * so no !important needed. Classic is the default (no attribute match required).
+ */
 
-/* Black pieces — transparent glyph, dark shadow fill */
-.cg-wrap piece.pawn.black::before   { content: "♟"; font-size: 8cqi; color: transparent; text-shadow: 0 0 0 #0f172a; }
-.cg-wrap piece.rook.black::before   { content: "♜"; color: transparent; text-shadow: 0 0 0 #0f172a; }
-.cg-wrap piece.knight.black::before { content: "♞"; color: transparent; text-shadow: 0 0 0 #0f172a; }
-.cg-wrap piece.bishop.black::before { content: "♝"; color: transparent; text-shadow: 0 0 0 #0f172a; }
-.cg-wrap piece.queen.black::before  { content: "♛"; color: transparent; text-shadow: 0 0 0 #0f172a; }
-.cg-wrap piece.king.black::before   { content: "♚"; color: transparent; text-shadow: 0 0 0 #0f172a; }
+/* Glyph content + pawn size — shared across all styles */
+.cg-wrap piece.pawn::before   { content: "♟"; font-size: 8cqi; }
+.cg-wrap piece.rook::before   { content: "♜"; }
+.cg-wrap piece.knight::before { content: "♞"; }
+.cg-wrap piece.bishop::before { content: "♝"; }
+.cg-wrap piece.queen::before  { content: "♛"; }
+.cg-wrap piece.king::before   { content: "♚"; }
+
+/* All pieces: transparent glyph fill so the shadow is all that's visible */
+.cg-wrap piece.white::before,
+.cg-wrap piece.black::before { color: transparent; }
+
+/* ── Classic (default) ───────────────────────────────────────────────────── */
+.cg-wrap piece.white::before {
+  text-shadow: 0 0 0 #f1f5f9, 1px 0 0 #1e293b, -1px 0 0 #1e293b, 0 1px 0 #1e293b, 0 -1px 0 #1e293b;
+}
+.cg-wrap piece.black::before {
+  text-shadow: 0 0 0 #0f172a;
+}
+
+/* ── Wood ────────────────────────────────────────────────────────────────── */
+[data-piece-style="wood"] .cg-wrap piece.white::before {
+  text-shadow: 0 0 0 #d4a76a, 1px 0 0 #431407, -1px 0 0 #431407, 0 1px 0 #431407, 0 -1px 0 #431407;
+}
+[data-piece-style="wood"] .cg-wrap piece.black::before {
+  text-shadow: 0 0 0 #431407;
+}
+
+/* ── Neon ────────────────────────────────────────────────────────────────── */
+[data-piece-style="neon"] .cg-wrap piece.white::before {
+  text-shadow: 0 0 0 #4ade80, 1px 0 0 #052e16, -1px 0 0 #052e16, 0 1px 0 #052e16, 0 -1px 0 #052e16;
+}
+[data-piece-style="neon"] .cg-wrap piece.black::before {
+  text-shadow: 0 0 0 #052e16;
+}
+
+/* ── Royal ───────────────────────────────────────────────────────────────── */
+[data-piece-style="royal"] .cg-wrap piece.white::before {
+  text-shadow: 0 0 0 #e0f2fe, 1px 0 0 #1e3a8a, -1px 0 0 #1e3a8a, 0 1px 0 #1e3a8a, 0 -1px 0 #1e3a8a;
+}
+[data-piece-style="royal"] .cg-wrap piece.black::before {
+  text-shadow: 0 0 0 #1e3a8a;
+}

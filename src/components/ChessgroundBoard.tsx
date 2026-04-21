@@ -6,6 +6,8 @@ import type { Api } from "chessground/api";
 import type { Key } from "chessground/types";
 import type { BoardTheme } from "@/lib/themes";
 import { DEFAULT_THEME } from "@/lib/themes";
+import type { PieceStyle } from "@/lib/pieceStyles";
+import { DEFAULT_PIECE_STYLE } from "@/lib/pieceStyles";
 
 type Props = {
   fen: string;
@@ -15,6 +17,7 @@ type Props = {
   check: boolean;
   onMove: (from: Key, to: Key) => void;
   theme?: BoardTheme;
+  pieceStyle?: PieceStyle;
 };
 
 export default function ChessgroundBoard({
@@ -25,6 +28,7 @@ export default function ChessgroundBoard({
   check,
   onMove,
   theme = DEFAULT_THEME,
+  pieceStyle = DEFAULT_PIECE_STYLE,
 }: Props) {
   const elRef = useRef<HTMLDivElement>(null);
   const cgRef = useRef<Api | null>(null);
@@ -68,17 +72,16 @@ export default function ChessgroundBoard({
     });
   }, [fen, turnColor, dests, lastMove, check]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // CSS custom properties on the wrapper propagate into cg-board selectors,
-  // letting the gradient checkerboard repaint instantly on theme change.
-  const themeVars = {
-    "--cg-light": theme.light,
-    "--cg-dark": theme.dark,
-  } as React.CSSProperties;
+  // Board colors cascade via CSS custom properties; piece style uses a data attribute
+  // so the correct [data-piece-style] selector fires without relying on variable
+  // inheritance through Chessground's internally-managed piece elements.
+  const boardVars = { "--cg-light": theme.light, "--cg-dark": theme.dark } as React.CSSProperties;
 
   return (
     <div
       className="w-full rounded-2xl border border-slate-700/50 bg-slate-950 p-2 shadow-[0_24px_56px_-8px_rgba(0,0,0,0.7)]"
-      style={themeVars}
+      style={boardVars}
+      data-piece-style={pieceStyle.id}
     >
       <div className="rounded-lg border border-slate-800 overflow-hidden">
         {/* aspect-square ensures Chessground always has a sized parent;
