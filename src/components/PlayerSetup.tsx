@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { BOARD_THEMES, DEFAULT_THEME, type BoardTheme } from "@/lib/themes";
 
 type Players = { white: string; black: string };
 
 type PlayerSetupProps = {
-  onStart: (players: Players) => void;
+  onStart: (players: Players, theme: BoardTheme) => void;
+  initialTheme?: BoardTheme;
 };
 
 const INPUT_CLASS = [
@@ -16,16 +18,17 @@ const INPUT_CLASS = [
   "focus:ring-2 focus:ring-emerald-500/20",
 ].join(" ");
 
-export default function PlayerSetup({ onStart }: PlayerSetupProps) {
+export default function PlayerSetup({ onStart, initialTheme }: PlayerSetupProps) {
   const [white, setWhite] = useState("");
   const [black, setBlack] = useState("");
+  const [theme, setTheme] = useState<BoardTheme>(initialTheme ?? DEFAULT_THEME);
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    onStart({
-      white: white.trim() || "White",
-      black: black.trim() || "Black",
-    });
+    onStart(
+      { white: white.trim() || "White", black: black.trim() || "Black" },
+      theme
+    );
   }
 
   return (
@@ -41,6 +44,7 @@ export default function PlayerSetup({ onStart }: PlayerSetupProps) {
 
       <div className="w-full rounded-2xl border border-slate-700/50 bg-slate-900 p-8 shadow-[0_24px_56px_-8px_rgba(0,0,0,0.7)]">
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          {/* Player names */}
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <label
@@ -95,6 +99,46 @@ export default function PlayerSetup({ onStart }: PlayerSetupProps) {
                 className={INPUT_CLASS}
               />
             </div>
+          </div>
+
+          {/* Board theme picker */}
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-slate-800" />
+              <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-600">
+                Board
+              </span>
+              <div className="flex-1 h-px bg-slate-800" />
+            </div>
+
+            <div className="flex items-center justify-center gap-3">
+              {BOARD_THEMES.map((t) => {
+                const selected = t.id === theme.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    title={t.name}
+                    aria-label={`${t.name} theme${selected ? " (selected)" : ""}`}
+                    onClick={() => setTheme(t)}
+                    className={[
+                      "w-9 h-9 rounded-full transition-all duration-150",
+                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50",
+                      selected
+                        ? "ring-2 ring-white ring-offset-2 ring-offset-slate-900 scale-110"
+                        : "opacity-70 hover:opacity-100 hover:scale-105",
+                    ].join(" ")}
+                    style={{
+                      background: `linear-gradient(135deg, ${t.light} 50%, ${t.dark} 50%)`,
+                    }}
+                  />
+                );
+              })}
+            </div>
+
+            <p className="text-center text-[11px] text-slate-500">
+              {theme.name}
+            </p>
           </div>
 
           <button

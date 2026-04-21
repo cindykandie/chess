@@ -27,16 +27,18 @@ body {
    ───────────────────────────────────────────────────────────── */
 
 /*
- * Board background: emerald-200 (#a7f3d0) for light squares.
- * The SVG is a 2×2 tile with dark squares (emerald-900 #064e3b)
- * at the off-diagonal positions, tiled at 25% × 25% of the board.
- * !important beats chessground.base.css's background-size: cover,
- * which would otherwise win because both rules have equal specificity
- * and base.css loads before globals.css in the bundle.
+ * Board checkerboard via two offset 45-degree gradients.
+ * --cg-light / --cg-dark are CSS custom properties set as inline styles
+ * on the ChessgroundBoard wrapper — changing them instantly repaints the board
+ * without touching any class or re-mounting Chessground.
+ * !important beats chessground.base.css rules (equal specificity, earlier load).
  */
 cg-board {
-  background-color: #a7f3d0 !important;
-  background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyIDIiIHNoYXBlLXJlbmRlcmluZz0iY3Jpc3BFZGdlcyI+PHJlY3QgZmlsbD0iIzA2NGUzYiIgeD0iMCIgeT0iMSIgd2lkdGg9IjEiIGhlaWdodD0iMSIvPjxyZWN0IGZpbGw9IiMwNjRlM2IiIHg9IjEiIHk9IjAiIHdpZHRoPSIxIiBoZWlnaHQ9IjEiLz48L3N2Zz4=') !important;
+  background-color: var(--cg-light, #a7f3d0) !important;
+  background-image: repeating-conic-gradient(
+    var(--cg-dark, #064e3b) 0% 25%,
+    transparent 0% 50%
+  ) !important;
   background-size: 25% 25% !important;
 }
 
