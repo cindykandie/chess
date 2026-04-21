@@ -171,6 +171,21 @@ cg-board square.check {
   );
 }
 
+.cg-wrap coords {
+  display: none !important;
+}
+
+/* Board coordinates: small black labels. */
+.board-coordinate-label {
+  opacity: 1;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: #020617;
+  line-height: 1;
+}
+
 /* ─────────────────────────────────────────────────────────────
    Chessground — Unicode piece rendering
 
@@ -224,7 +239,7 @@ cg-board square.check {
  */
 
 /* Glyph content + pawn size — shared across all styles */
-.cg-wrap piece.pawn::before   { content: "♟"; font-size: 8cqi; }
+.cg-wrap piece.pawn::before   { content: "♟"; font-size:6.8cqi; }
 .cg-wrap piece.rook::before   { content: "♜"; }
 .cg-wrap piece.knight::before { content: "♞"; }
 .cg-wrap piece.bishop::before { content: "♝"; }

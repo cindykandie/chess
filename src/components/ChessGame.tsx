@@ -8,6 +8,7 @@ import ChessgroundBoard from "./ChessgroundBoard";
 import CapturedPieces from "./CapturedPieces";
 import TurnIndicator from "./TurnIndicator";
 import WinnerModal from "./WinnerModal";
+import PromotionModal, { type PromotionPiece } from "./PromotionModal";
 import type { BoardTheme } from "@/lib/themes";
 import type { PieceStyle } from "@/lib/pieceStyles";
 import type { GameRecord } from "@/lib/storage";
@@ -22,6 +23,14 @@ type ChessGameProps = {
 };
 
 type StoredMove = { from: string; to: string; promotion?: string };
+type PendingPromotion = {
+  from: Key;
+  to: Key;
+  color: "w" | "b";
+  choices: PromotionPiece[];
+};
+
+const PROMOTION_ORDER: PromotionPiece[] = ["q", "r", "b", "n"];
 
 const SECONDARY_BTN = [
   "flex items-center gap-2 rounded-lg border px-4 py-2",
@@ -41,6 +50,29 @@ function getDests(game: Chess): Map<Key, Key[]> {
   return dests;
 }
 
+function getPromotionChoices(
+  game: Chess,
+  from: Key,
+  to: Key
+): PendingPromotion | null {
+  const promotionMoves = (game.moves({ verbose: true }) as Move[]).filter(
+    (move) => move.from === from && move.to === to && move.promotion
+  );
+
+  if (promotionMoves.length === 0) return null;
+
+  const legalChoices = new Set(
+    promotionMoves.map((move) => move.promotion as PromotionPiece)
+  );
+
+  return {
+    from,
+    to,
+    color: promotionMoves[0].color,
+    choices: PROMOTION_ORDER.filter((piece) => legalChoices.has(piece)),
+  };
+}
+
 export default function ChessGame({
   whiteName,
   blackName,
@@ -51,6 +83,8 @@ export default function ChessGame({
 }: ChessGameProps) {
   const [moves, setMoves] = useState<StoredMove[]>([]);
   const [lastMove, setLastMove] = useState<[Key, Key] | undefined>(undefined);
+  const [pendingPromotion, setPendingPromotion] =
+    useState<PendingPromotion | null>(null);
 
   const game = useMemo(() => {
     const g = new Chess();
@@ -129,12 +163,42 @@ export default function ChessGame({
   const onMove = useCallback((from: Key, to: Key) => {
     const current = gameRef.current;
     if (current.isGameOver()) return;
+    const promotion = getPromotionChoices(current, from, to);
+    if (promotion) {
+      setPendingPromotion(promotion);
+      return;
+    }
     const probe = new Chess(current.fen());
-    const m = probe.move({ from, to, promotion: "q" });
+    const m = probe.move({ from, to });
     if (!m) return;
     setMoves((prev) => [...prev, { from: m.from, to: m.to, promotion: m.promotion }]);
     setLastMove([from, to]);
   }, []);
+
+  const handlePromotionSelect = useCallback((piece: PromotionPiece) => {
+    const pending = pendingPromotion;
+    if (!pending) return;
+
+    const current = gameRef.current;
+    const probe = new Chess(current.fen());
+    const move = probe.move({
+      from: pending.from,
+      to: pending.to,
+      promotion: piece,
+    });
+
+    if (!move) {
+      setPendingPromotion(null);
+      return;
+    }
+
+    setMoves((prev) => [
+      ...prev,
+      { from: move.from, to: move.to, promotion: move.promotion },
+    ]);
+    setLastMove([pending.from, pending.to]);
+    setPendingPromotion(null);
+  }, [pendingPromotion]);
 
   function recordAbandoned() {
     if (moves.length > 0 && !isGameOver && !recordedRef.current) {
@@ -153,6 +217,7 @@ export default function ChessGame({
   const handleReset = useCallback(() => {
     recordAbandoned();
     recordedRef.current = false;
+    setPendingPromotion(null);
     setMoves([]);
     setLastMove(undefined);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -165,6 +230,14 @@ export default function ChessGame({
 
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-[540px]">
+      {pendingPromotion && (
+        <PromotionModal
+          color={pendingPromotion.color}
+          choices={pendingPromotion.choices}
+          onSelect={handlePromotionSelect}
+        />
+      )}
+
       {winner && (
         <WinnerModal
           winnerColor={winner.color}
@@ -200,6 +273,7 @@ export default function ChessGame({
           onMove={onMove}
           theme={theme}
           pieceStyle={pieceStyle}
+          disabled={Boolean(pendingPromotion)}
         />
         <CapturedPieces pieces={capturedByWhite} pieceColor="b" name={whiteName} />
       </div>

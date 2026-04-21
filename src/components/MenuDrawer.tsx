@@ -1,7 +1,6 @@
 "use client";
 
-import { BOARD_THEMES, type BoardTheme } from "@/lib/themes";
-import { PIECE_STYLES, type PieceStyle } from "@/lib/pieceStyles";
+import AppearanceSettings from "./AppearanceSettings";
 import type { Settings, GameRecord } from "@/lib/storage";
 
 type Props = {
@@ -14,35 +13,6 @@ type Props = {
   history: GameRecord[];
   onClearHistory: () => void;
 };
-
-function Swatch<T extends { id: string; name: string }>({
-  item,
-  selected,
-  style,
-  onClick,
-}: {
-  item: T;
-  selected: boolean;
-  style: React.CSSProperties;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      title={item.name}
-      aria-label={`${item.name}${selected ? " (selected)" : ""}`}
-      onClick={onClick}
-      className={[
-        "w-8 h-8 rounded-full transition-all duration-150",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40",
-        selected
-          ? "ring-2 ring-white ring-offset-2 ring-offset-slate-900 scale-110"
-          : "opacity-60 hover:opacity-90 hover:scale-105",
-      ].join(" ")}
-      style={style}
-    />
-  );
-}
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -81,14 +51,6 @@ export default function MenuDrawer({
   history,
   onClearHistory,
 }: Props) {
-  function setTheme(theme: BoardTheme) {
-    onSettingsChange({ ...settings, theme });
-  }
-
-  function setPieceStyle(pieceStyle: PieceStyle) {
-    onSettingsChange({ ...settings, pieceStyle });
-  }
-
   return (
     <div
       className={`fixed inset-0 z-50 ${isOpen ? "visible" : "invisible"}`}
@@ -142,39 +104,10 @@ export default function MenuDrawer({
             </div>
           )}
 
-          {/* Board theme */}
-          <div className="px-5 py-4 border-b border-slate-800/40">
-            <SectionLabel>Board Theme</SectionLabel>
-            <div className="flex items-center gap-2.5 mb-2">
-              {BOARD_THEMES.map((t) => (
-                <Swatch
-                  key={t.id}
-                  item={t}
-                  selected={t.id === settings.theme.id}
-                  style={{ background: `linear-gradient(135deg, ${t.light} 50%, ${t.dark} 50%)` }}
-                  onClick={() => setTheme(t)}
-                />
-              ))}
-            </div>
-            <p className="text-[11px] text-slate-500">{settings.theme.name}</p>
-          </div>
-
-          {/* Piece style */}
-          <div className="px-5 py-4 border-b border-slate-800/40">
-            <SectionLabel>Piece Style</SectionLabel>
-            <div className="flex items-center gap-2.5 mb-2">
-              {PIECE_STYLES.map((s) => (
-                <Swatch
-                  key={s.id}
-                  item={s}
-                  selected={s.id === settings.pieceStyle.id}
-                  style={{ background: `linear-gradient(135deg, ${s.white} 50%, ${s.black} 50%)` }}
-                  onClick={() => setPieceStyle(s)}
-                />
-              ))}
-            </div>
-            <p className="text-[11px] text-slate-500">{settings.pieceStyle.name}</p>
-          </div>
+          <AppearanceSettings
+            settings={settings}
+            onSettingsChange={onSettingsChange}
+          />
 
           {/* Game history */}
           <div className="px-5 py-4">

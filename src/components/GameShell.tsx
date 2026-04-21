@@ -60,7 +60,11 @@ export default function GameShell() {
 
       <main className="flex flex-1 items-center justify-center px-4 py-8 sm:p-8">
         {appState.screen === "setup" ? (
-          <PlayerSetup onStart={handleStart} />
+          <PlayerSetup
+            onStart={handleStart}
+            settings={settings}
+            onSettingsChange={setSettings}
+          />
         ) : (
           <ChessGame
             whiteName={appState.players.white}

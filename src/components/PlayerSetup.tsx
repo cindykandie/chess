@@ -1,11 +1,15 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import AppearanceSettings from "./AppearanceSettings";
+import type { Settings } from "@/lib/storage";
 
 type Players = { white: string; black: string };
 
 type PlayerSetupProps = {
   onStart: (players: Players) => void;
+  settings: Settings;
+  onSettingsChange: (settings: Settings) => void;
 };
 
 const INPUT_CLASS = [
@@ -16,7 +20,11 @@ const INPUT_CLASS = [
   "focus:ring-2 focus:ring-emerald-500/20",
 ].join(" ");
 
-export default function PlayerSetup({ onStart }: PlayerSetupProps) {
+export default function PlayerSetup({
+  onStart,
+  settings,
+  onSettingsChange,
+}: PlayerSetupProps) {
   const [white, setWhite] = useState("");
   const [black, setBlack] = useState("");
 
@@ -80,6 +88,12 @@ export default function PlayerSetup({ onStart }: PlayerSetupProps) {
             </div>
           </div>
 
+          <AppearanceSettings
+            settings={settings}
+            onSettingsChange={onSettingsChange}
+            variant="setup"
+          />
+
           <button
             type="submit"
             className={[
@@ -94,10 +108,6 @@ export default function PlayerSetup({ onStart }: PlayerSetupProps) {
           </button>
         </form>
       </div>
-
-      <p className="mt-4 text-[11px] text-slate-600">
-        Customise board & pieces from the menu
-      </p>
     </div>
   );
 }
