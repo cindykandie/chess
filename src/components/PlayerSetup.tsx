@@ -27,13 +27,14 @@ export default function PlayerSetup({
 }: PlayerSetupProps) {
   const [white, setWhite] = useState("");
   const [black, setBlack] = useState("");
+  const [theme, setTheme] = useState<BoardTheme>(initialTheme ?? DEFAULT_THEME);
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    onStart({
-      white: white.trim() || "White",
-      black: black.trim() || "Black",
-    });
+    onStart(
+      { white: white.trim() || "White", black: black.trim() || "Black" },
+      theme
+    );
   }
 
   return (
@@ -49,6 +50,7 @@ export default function PlayerSetup({
 
       <div className="w-full rounded-lg border border-slate-700/50 bg-slate-900 p-5 shadow-[0_24px_56px_-8px_rgba(0,0,0,0.7)] sm:p-6">
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          {/* Player names */}
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <label

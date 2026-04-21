@@ -120,6 +120,7 @@ export default function ChessGame({
     if (game.isDraw()) return "Draw";
     const [side, color] =
       game.turn() === "w" ? [whiteName, "white"] : [blackName, "black"];
+      game.turn() === "w" ? [whiteName, "white"] : [blackName, "black"];
     if (game.inCheck()) return `${side} (${color}) — in check!`;
     return `${side} (${color}) to move`;
   }, [game, whiteName, blackName]);
@@ -273,6 +274,7 @@ export default function ChessGame({
 
       <TurnIndicator
         statusText={statusText}
+        turn={isGameOver ? null : game.turn()}
         turn={isGameOver ? null : game.turn()}
         isCheck={game.inCheck()}
       />
