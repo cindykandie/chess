@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+// Base CSS first so our globals.css theme rules win the cascade
+import "chessground/assets/chessground.base.css";
 import "./globals.css";
 
 const geistSans = Geist({

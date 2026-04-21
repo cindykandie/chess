@@ -17,41 +17,124 @@ body {
   color: var(--foreground);
 }
 
-/* Subtle emerald tint on text selection to stay on-theme */
 ::selection {
   background: rgba(52, 211, 153, 0.18);
   color: inherit;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   Chessground — emerald board theme
+   ───────────────────────────────────────────────────────────── */
+
 /*
- * piece-enter
- * Plays when a piece span mounts on a square — either a move destination
- * or a capture (where the pieceChar key changes, forcing a remount).
- * Spring easing with ~8% overshoot gives a physical "settle" feeling.
+ * Board background: emerald-200 (#a7f3d0) for light squares.
+ * The SVG is a 2×2 tile with dark squares (emerald-900 #064e3b)
+ * at the off-diagonal positions, tiled at 25% × 25% of the board.
+ * !important beats chessground.base.css's background-size: cover,
+ * which would otherwise win because both rules have equal specificity
+ * and base.css loads before globals.css in the bundle.
  */
-@keyframes piece-enter {
-  from {
-    opacity: 0;
-    transform: scale(0.72) translateY(-3px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
+cg-board {
+  background-color: #a7f3d0 !important;
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyIDIiIHNoYXBlLXJlbmRlcmluZz0iY3Jpc3BFZGdlcyI+PHJlY3QgZmlsbD0iIzA2NGUzYiIgeD0iMCIgeT0iMSIgd2lkdGg9IjEiIGhlaWdodD0iMSIvPjxyZWN0IGZpbGw9IiMwNjRlM2IiIHg9IjEiIHk9IjAiIHdpZHRoPSIxIiBoZWlnaHQ9IjEiLz48L3N2Zz4=') !important;
+  background-size: 25% 25% !important;
+}
+
+/* Last-move highlight */
+cg-board square.last-move {
+  background-color: rgba(250, 204, 21, 0.38);
+}
+
+/* Selected square */
+cg-board square.selected {
+  background-color: rgba(250, 204, 21, 0.55);
+}
+
+/* Legal-move dot (empty square destination) */
+cg-board square.move-dest {
+  background: radial-gradient(
+    rgba(0, 0, 0, 0.25) 22%,
+    transparent 23%
+  );
+  cursor: pointer;
+}
+
+/* Legal-move ring (capture destination) */
+cg-board square.oc.move-dest {
+  background: radial-gradient(
+    transparent 0%,
+    transparent 75%,
+    rgba(0, 0, 0, 0.25) 76%
+  );
+  cursor: pointer;
+}
+
+/* Check: radial red glow centred on the king */
+cg-board square.check {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(220, 38, 38, 0.85) 0%,
+    rgba(220, 38, 38, 0.5) 30%,
+    transparent 75%
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Chessground — Unicode piece rendering
+
+   Pieces are <piece> custom elements positioned absolutely at
+   12.5% × 12.5% of the board. We suppress the background-image
+   (SVG piece sets) and render Unicode glyphs via ::before
+   instead, sized with cqi units relative to .cg-wrap width.
+   ───────────────────────────────────────────────────────────── */
+
+/*
+ * Suppress the default SVG piece images and render Unicode glyphs instead.
+ * container-type is set via inline style on the mount div so cqi units
+ * always resolve to the board width — no dependency on CSS cascade order.
+ */
+.cg-wrap piece {
+  background-image: none !important;
+  background-color: transparent !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.cg-wrap piece::before {
+  /* 10cqi = 10% of the .cg-wrap inline size ≈ 80% of one square */
+  font-size: 10cqi;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
 }
 
 /*
- * dot-enter
- * Legal-move dots expand from the center of the square.
- * Faster than piece-enter so hints appear instantly on selection.
+ * Both sides use the filled (black) Unicode glyphs — the outline "white"
+ * glyphs (♙♖♘…) are hollow by design in the Unicode spec and look
+ * incomplete at large sizes. Using filled glyphs for both and coloring
+ * white pieces with a contrasting text-shadow gives solid, readable pieces.
  */
-@keyframes dot-enter {
-  from {
-    opacity: 0;
-    transform: scale(0.25);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
+
+/*
+ * color: transparent + text-shadow: 0 0 0 [color] bypasses emoji rendering entirely.
+ * The browser draws a zero-offset shadow that traces the glyph shape using
+ * pure CSS paint — the actual glyph fill is invisible, so macOS emoji fonts
+ * can't override the color.
+ */
+
+/* White pieces — transparent glyph, white shadow fill + dark outline */
+.cg-wrap piece.pawn.white::before   { content: "♟"; font-size: 8cqi; color: transparent; text-shadow: 0 0 0 #f1f5f9, 1px 0 0 #1e293b, -1px 0 0 #1e293b, 0 1px 0 #1e293b, 0 -1px 0 #1e293b; }
+.cg-wrap piece.rook.white::before   { content: "♜"; color: transparent; text-shadow: 0 0 0 #f1f5f9, 1px 0 0 #1e293b, -1px 0 0 #1e293b, 0 1px 0 #1e293b, 0 -1px 0 #1e293b; }
+.cg-wrap piece.knight.white::before { content: "♞"; color: transparent; text-shadow: 0 0 0 #f1f5f9, 1px 0 0 #1e293b, -1px 0 0 #1e293b, 0 1px 0 #1e293b, 0 -1px 0 #1e293b; }
+.cg-wrap piece.bishop.white::before { content: "♝"; color: transparent; text-shadow: 0 0 0 #f1f5f9, 1px 0 0 #1e293b, -1px 0 0 #1e293b, 0 1px 0 #1e293b, 0 -1px 0 #1e293b; }
+.cg-wrap piece.queen.white::before  { content: "♛"; color: transparent; text-shadow: 0 0 0 #f1f5f9, 1px 0 0 #1e293b, -1px 0 0 #1e293b, 0 1px 0 #1e293b, 0 -1px 0 #1e293b; }
+.cg-wrap piece.king.white::before   { content: "♚"; color: transparent; text-shadow: 0 0 0 #f1f5f9, 1px 0 0 #1e293b, -1px 0 0 #1e293b, 0 1px 0 #1e293b, 0 -1px 0 #1e293b; }
+
+/* Black pieces — transparent glyph, dark shadow fill */
+.cg-wrap piece.pawn.black::before   { content: "♟"; font-size: 8cqi; color: transparent; text-shadow: 0 0 0 #0f172a; }
+.cg-wrap piece.rook.black::before   { content: "♜"; color: transparent; text-shadow: 0 0 0 #0f172a; }
+.cg-wrap piece.knight.black::before { content: "♞"; color: transparent; text-shadow: 0 0 0 #0f172a; }
+.cg-wrap piece.bishop.black::before { content: "♝"; color: transparent; text-shadow: 0 0 0 #0f172a; }
+.cg-wrap piece.queen.black::before  { content: "♛"; color: transparent; text-shadow: 0 0 0 #0f172a; }
+.cg-wrap piece.king.black::before   { content: "♚"; color: transparent; text-shadow: 0 0 0 #0f172a; }

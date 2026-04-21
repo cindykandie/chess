@@ -1,13 +1,12 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { Chess, type Move, type Square as ChessSquare } from "chess.js";
+import { Chess, type Move } from "chess.js";
+import type { Key } from "chessground/types";
 
-import ChessBoard from "./ChessBoard";
+import ChessgroundBoard from "./ChessgroundBoard";
 import CapturedPieces from "./CapturedPieces";
 import TurnIndicator from "./TurnIndicator";
-import type { Square } from "../lib/chess";
-import { indexToSquare } from "../lib/chess";
 
 type ChessGameProps = {
   whiteName: string;
@@ -23,13 +22,24 @@ const SECONDARY_BTN = [
   "active:scale-[0.97]",
 ].join(" ");
 
+// Build the destination map Chessground needs: { from → [to, ...] }
+// One game.moves() call is cheaper than 64 individual square queries.
+function getDests(game: Chess): Map<Key, Key[]> {
+  const dests = new Map<Key, Key[]>();
+  for (const { from, to } of game.moves({ verbose: true }) as Move[]) {
+    const targets = dests.get(from as Key);
+    if (targets) targets.push(to as Key);
+    else dests.set(from as Key, [to as Key]);
+  }
+  return dests;
+}
+
 export default function ChessGame({ whiteName, blackName, onReturnToSetup }: ChessGameProps) {
   const [game, setGame] = useState(() => new Chess());
-  const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
-  const [legalTargets, setLegalTargets] = useState<Set<Square>>(new Set());
-  const [lastMove, setLastMove] = useState<{ from: Square; to: Square } | null>(null);
+  const [lastMove, setLastMove] = useState<[Key, Key] | undefined>(undefined);
 
-  const board = game.board();
+  const isGameOver = game.isGameOver();
+  const turnColor = game.turn() === "w" ? "white" : "black";
 
   const statusText = useMemo(() => {
     if (game.isCheckmate()) {
@@ -62,69 +72,29 @@ export default function ChessGame({ whiteName, blackName, onReturnToSetup }: Che
     return { capturedByWhite: white, capturedByBlack: black };
   }, [game]);
 
-  // chess.js findPiece is O(1) lookup vs the previous 64-square scan
-  const checkSquare = useMemo(
-    () =>
-      game.inCheck()
-        ? (game.findPiece({ type: "k", color: game.turn() })[0] as Square)
-        : null,
-    [game]
+  // Empty dests when game is over: Chessground shows the position but allows no moves.
+  const dests = useMemo(
+    () => (isGameOver ? new Map<Key, Key[]>() : getDests(game)),
+    [game, isGameOver]
   );
 
-  const handleSquareClick = useCallback(
-    (rowIndex: number, colIndex: number) => {
-      const square = indexToSquare(rowIndex, colIndex) as ChessSquare;
-
-      if (game.isGameOver()) return;
-
-      const piece = game.get(square);
-      const turnColor = game.turn();
-
-      if (!selectedSquare) {
-        if (!piece || piece.color !== turnColor) return;
-        setSelectedSquare(square);
-        const moves = game.moves({ square, verbose: true }) as Move[];
-        setLegalTargets(new Set(moves.map((m) => m.to as Square)));
-        return;
-      }
-
-      if (square === selectedSquare) {
-        setSelectedSquare(null);
-        setLegalTargets(new Set());
-        return;
-      }
-
-      if (piece && piece.color === turnColor && !legalTargets.has(square)) {
-        setSelectedSquare(square);
-        const moves = game.moves({ square, verbose: true }) as Move[];
-        setLegalTargets(new Set(moves.map((m) => m.to as Square)));
-        return;
-      }
-
-      if (legalTargets.has(square)) {
-        const newGame = new Chess(game.fen());
-        const move = newGame.move({
-          from: selectedSquare as ChessSquare,
-          to: square,
-          promotion: "q",
-        });
-
-        if (move) {
-          setGame(newGame);
-          setLastMove({ from: selectedSquare, to: square });
-        }
-        setSelectedSquare(null);
-        setLegalTargets(new Set());
+  const onMove = useCallback(
+    (from: Key, to: Key) => {
+      if (isGameOver) return;
+      const newGame = new Chess(game.fen());
+      // Always promote to queen — a promotion dialog can be added later.
+      const move = newGame.move({ from, to, promotion: "q" });
+      if (move) {
+        setGame(newGame);
+        setLastMove([from, to]);
       }
     },
-    [game, selectedSquare, legalTargets]
+    [game, isGameOver]
   );
 
   const handleReset = () => {
     setGame(new Chess());
-    setSelectedSquare(null);
-    setLegalTargets(new Set());
-    setLastMove(null);
+    setLastMove(undefined);
   };
 
   return (
@@ -140,19 +110,19 @@ export default function ChessGame({ whiteName, blackName, onReturnToSetup }: Che
 
       <TurnIndicator
         statusText={statusText}
-        turn={game.isGameOver() ? null : game.turn()}
+        turn={isGameOver ? null : game.turn()}
         isCheck={game.inCheck()}
       />
 
       <div className="flex flex-col items-start gap-1 w-full">
         <CapturedPieces pieces={capturedByBlack} pieceColor="w" name={blackName} />
-        <ChessBoard
-          board={board}
-          selectedSquare={selectedSquare}
-          legalTargets={legalTargets}
+        <ChessgroundBoard
+          fen={game.fen()}
+          turnColor={turnColor}
+          dests={dests}
           lastMove={lastMove}
-          checkSquare={checkSquare}
-          onSquareClick={handleSquareClick}
+          check={game.inCheck()}
+          onMove={onMove}
         />
         <CapturedPieces pieces={capturedByWhite} pieceColor="b" name={whiteName} />
       </div>
