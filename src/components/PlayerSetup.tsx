@@ -13,7 +13,7 @@ type PlayerSetupProps = {
 };
 
 const INPUT_CLASS = [
-  "w-full rounded-xl border bg-slate-800/60 px-4 py-3",
+  "w-full rounded-lg border bg-slate-800/60 px-4 py-3",
   "text-sm text-slate-100 placeholder:text-slate-600",
   "border-slate-700/60 transition-all duration-150",
   "focus:border-emerald-500/70 focus:outline-none",
@@ -30,12 +30,15 @@ export default function PlayerSetup({
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    onStart({ white: white.trim() || "White", black: black.trim() || "Black" });
+    onStart({
+      white: white.trim() || "White",
+      black: black.trim() || "Black",
+    });
   }
 
   return (
-    <div className="flex flex-col items-center w-full max-w-sm">
-      <div className="text-center mb-8">
+    <div className="flex w-full max-w-md flex-col items-center">
+      <div className="mb-7 text-center">
         <h1 className="text-2xl font-bold tracking-tight text-slate-100">
           No-Ordinary Chess
         </h1>
@@ -44,12 +47,18 @@ export default function PlayerSetup({
         </p>
       </div>
 
-      <div className="w-full rounded-2xl border border-slate-700/50 bg-slate-900 p-8 shadow-[0_24px_56px_-8px_rgba(0,0,0,0.7)]">
+      <div className="w-full rounded-lg border border-slate-700/50 bg-slate-900 p-5 shadow-[0_24px_56px_-8px_rgba(0,0,0,0.7)] sm:p-6">
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <label htmlFor="white-name" className="flex items-center gap-2 text-xs font-medium text-slate-400">
-                <span aria-hidden className="w-2 h-2 shrink-0 rounded-full bg-slate-100 shadow-[0_0_0_1.5px_rgba(148,163,184,0.25)]" />
+              <label
+                htmlFor="white-name"
+                className="flex items-center gap-2 text-xs font-medium text-slate-400"
+              >
+                <span
+                  aria-hidden
+                  className="h-2 w-2 shrink-0 rounded-full bg-slate-100 shadow-[0_0_0_1.5px_rgba(148,163,184,0.25)]"
+                />
                 White
               </label>
               <input
@@ -65,14 +74,22 @@ export default function PlayerSetup({
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-slate-800" />
-              <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-600">vs</span>
-              <div className="flex-1 h-px bg-slate-800" />
+              <div className="h-px flex-1 bg-slate-800" />
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">
+                vs
+              </span>
+              <div className="h-px flex-1 bg-slate-800" />
             </div>
 
             <div className="flex flex-col gap-2">
-              <label htmlFor="black-name" className="flex items-center gap-2 text-xs font-medium text-slate-400">
-                <span aria-hidden className="w-2 h-2 shrink-0 rounded-full bg-slate-900 ring-1 ring-slate-500" />
+              <label
+                htmlFor="black-name"
+                className="flex items-center gap-2 text-xs font-medium text-slate-400"
+              >
+                <span
+                  aria-hidden
+                  className="h-2 w-2 shrink-0 rounded-full bg-slate-900 ring-1 ring-slate-500"
+                />
                 Black
               </label>
               <input
@@ -97,7 +114,7 @@ export default function PlayerSetup({
           <button
             type="submit"
             className={[
-              "w-full rounded-xl px-4 py-3",
+              "w-full rounded-lg px-4 py-3",
               "bg-emerald-700 text-sm font-semibold text-white",
               "shadow-[0_4px_16px_-4px_rgba(5,150,105,0.5)]",
               "transition-all duration-150 hover:bg-emerald-600",

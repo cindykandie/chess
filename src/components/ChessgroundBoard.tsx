@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { Chessground } from "chessground";
 import type { Api } from "chessground/api";
 import type { Key } from "chessground/types";
@@ -84,24 +84,30 @@ export default function ChessgroundBoard({
   // Board colors cascade via CSS custom properties; piece style uses a data attribute
   // so the correct [data-piece-style] selector fires without relying on variable
   // inheritance through Chessground's internally-managed piece elements.
-  const boardVars = { "--cg-light": theme.light, "--cg-dark": theme.dark } as React.CSSProperties;
+  const boardVars = {
+    "--cg-light": theme.light,
+    "--cg-dark": theme.dark,
+  } as CSSProperties;
 
   return (
     <div
-      className="w-full rounded-2xl border border-slate-700/50 bg-slate-950 p-2 shadow-[0_24px_56px_-8px_rgba(0,0,0,0.7)]"
+      className="w-full rounded-lg border border-slate-700/50 bg-slate-950 p-1.5 shadow-[0_24px_56px_-8px_rgba(0,0,0,0.7)] sm:p-2"
       style={boardVars}
       data-piece-style={pieceStyle.id}
     >
-      <div className="rounded-lg border border-slate-800 overflow-hidden">
+      <div className="overflow-hidden rounded-md border border-slate-800">
         {/* aspect-square ensures Chessground always has a sized parent;
             container-type inline resolves cqi units to board width. */}
         <div className="relative aspect-square w-full">
           <div
             ref={elRef}
             className="w-full h-full"
-            style={{ containerType: "inline-size" } as React.CSSProperties}
+            style={{ containerType: "inline-size" } as CSSProperties}
           />
-          <div className="pointer-events-none absolute inset-0 z-10" aria-hidden="true">
+          <div
+            className="pointer-events-none absolute inset-0 z-10"
+            aria-hidden="true"
+          >
             {RANKS.map((rank, index) => (
               <span
                 key={rank}

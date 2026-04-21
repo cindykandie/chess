@@ -17,7 +17,9 @@ export function loadSettings(): Settings {
     const saved = JSON.parse(raw) as { themeId?: string; pieceStyleId?: string };
     return {
       theme: BOARD_THEMES.find((t) => t.id === saved.themeId) ?? DEFAULT_THEME,
-      pieceStyle: PIECE_STYLES.find((p) => p.id === saved.pieceStyleId) ?? DEFAULT_PIECE_STYLE,
+      pieceStyle:
+        PIECE_STYLES.find((p) => p.id === saved.pieceStyleId) ??
+        DEFAULT_PIECE_STYLE,
     };
   } catch {
     return { theme: DEFAULT_THEME, pieceStyle: DEFAULT_PIECE_STYLE };
@@ -28,7 +30,10 @@ export function saveSettings(settings: Settings): void {
   try {
     localStorage.setItem(
       SETTINGS_KEY,
-      JSON.stringify({ themeId: settings.theme.id, pieceStyleId: settings.pieceStyle.id })
+      JSON.stringify({
+        themeId: settings.theme.id,
+        pieceStyleId: settings.pieceStyle.id,
+      })
     );
   } catch {
     // localStorage unavailable (private browsing, quota exceeded, etc.) — silent fail
@@ -68,7 +73,9 @@ export function clearHistory(): void {
   }
 }
 
-export function addGameRecord(record: Omit<GameRecord, "id" | "playedAt">): GameRecord {
+export function addGameRecord(
+  record: Omit<GameRecord, "id" | "playedAt">
+): GameRecord {
   const full: GameRecord = {
     ...record,
     id: crypto.randomUUID(),

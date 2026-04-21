@@ -16,7 +16,7 @@ type Props = {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[10px] font-semibold tracking-widest uppercase text-slate-500 mb-3">
+    <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
       {children}
     </p>
   );
@@ -56,7 +56,6 @@ export default function MenuDrawer({
       className={`fixed inset-0 z-50 ${isOpen ? "visible" : "invisible"}`}
       aria-hidden={!isOpen}
     >
-      {/* Backdrop */}
       <div
         className={`absolute inset-0 bg-black/60 backdrop-blur-[2px] transition-opacity duration-300 ${
           isOpen ? "opacity-100" : "opacity-0"
@@ -64,40 +63,60 @@ export default function MenuDrawer({
         onClick={onClose}
       />
 
-      {/* Drawer panel */}
       <aside
-        className={`absolute right-0 top-0 h-full w-80 bg-slate-900 border-l border-slate-800/60 flex flex-col
-          shadow-[−24px_0_64px_rgba(0,0,0,0.6)]
+        className={`absolute right-0 top-0 flex h-full w-full max-w-80 flex-col border-l border-slate-800/60 bg-slate-900
+          shadow-[-24px_0_64px_rgba(0,0,0,0.6)]
           transition-transform duration-300 ease-in-out
           ${isOpen ? "translate-x-0" : "translate-x-full"}`}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 h-14 border-b border-slate-800/60 shrink-0">
+        <div className="flex h-14 shrink-0 items-center justify-between border-b border-slate-800/60 px-5">
           <span className="text-sm font-semibold text-slate-200">Menu</span>
           <button
             onClick={onClose}
             aria-label="Close menu"
-            className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors duration-150"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors duration-150 hover:bg-slate-800 hover:text-slate-200"
           >
-            <svg viewBox="0 0 20 20" fill="none" className="w-4 h-4" aria-hidden="true">
-              <path d="M4 4l12 12M16 4L4 16" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/>
+            <svg
+              viewBox="0 0 20 20"
+              fill="none"
+              className="h-4 w-4"
+              aria-hidden="true"
+            >
+              <path
+                d="M4 4l12 12M16 4L4 16"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+              />
             </svg>
           </button>
         </div>
 
-        {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto overscroll-contain">
-
-          {/* Navigation */}
           {screen === "game" && (
             <div className="px-5 py-4 border-b border-slate-800/40">
-              <SectionLabel>Navigation</SectionLabel>
+              <div className="mb-3">
+                <SectionLabel>Navigation</SectionLabel>
+              </div>
               <button
-                onClick={() => { onNavigateHome(); onClose(); }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:bg-slate-800 hover:text-slate-100 transition-colors duration-150"
+                onClick={() => {
+                  onNavigateHome();
+                  onClose();
+                }}
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-300 transition-colors duration-150 hover:bg-slate-800 hover:text-slate-100"
               >
-                <svg viewBox="0 0 20 20" fill="none" className="w-4 h-4 shrink-0 text-slate-500" aria-hidden="true">
-                  <path d="M3 9.5L10 3l7 6.5V17a1 1 0 01-1 1h-4v-4H8v4H4a1 1 0 01-1-1V9.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+                <svg
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  className="h-4 w-4 shrink-0 text-slate-500"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M3 9.5L10 3l7 6.5V17a1 1 0 01-1 1h-4v-4H8v4H4a1 1 0 01-1-1V9.5z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinejoin="round"
+                  />
                 </svg>
                 Home
               </button>
@@ -109,14 +128,13 @@ export default function MenuDrawer({
             onSettingsChange={onSettingsChange}
           />
 
-          {/* Game history */}
           <div className="px-5 py-4">
-            <div className="flex items-center justify-between mb-3">
+            <div className="mb-3 flex items-center justify-between">
               <SectionLabel>History</SectionLabel>
               {history.length > 0 && (
                 <button
                   onClick={onClearHistory}
-                  className="text-[10px] font-medium text-slate-600 hover:text-slate-400 transition-colors duration-150 -mt-3"
+                  className="text-[10px] font-medium text-slate-600 transition-colors duration-150 hover:text-slate-400"
                 >
                   Clear
                 </button>
@@ -124,23 +142,25 @@ export default function MenuDrawer({
             </div>
 
             {history.length === 0 ? (
-              <p className="text-xs text-slate-600 text-center py-4">No games played yet.</p>
+              <p className="py-4 text-center text-xs text-slate-600">
+                No games played yet.
+              </p>
             ) : (
               <ul className="flex flex-col gap-2">
                 {history.map((record) => (
                   <li
                     key={record.id}
-                    className="rounded-lg bg-slate-800/50 border border-slate-700/40 px-3 py-2.5"
+                    className="rounded-lg border border-slate-700/40 bg-slate-800/50 px-3 py-2.5"
                   >
                     <p className="text-xs font-medium text-slate-300 truncate">
                       {record.white} <span className="text-slate-600">vs</span> {record.black}
                     </p>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
+                    <p className="mt-0.5 text-[11px] text-slate-500">
                       {formatResult(record)}
                       <span className="mx-1.5 text-slate-700">·</span>
                       {record.moves} moves
                     </p>
-                    <p className="text-[10px] text-slate-600 mt-0.5">
+                    <p className="mt-0.5 text-[10px] text-slate-600">
                       {formatDate(record.playedAt)}
                     </p>
                   </li>
@@ -148,7 +168,6 @@ export default function MenuDrawer({
               </ul>
             )}
           </div>
-
         </div>
       </aside>
     </div>

@@ -42,7 +42,7 @@ export default function WinnerModal({
           {winnerName} takes the match.
         </p>
 
-        <div className="mt-5 flex items-center justify-center gap-3">
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
           <button
             type="button"
             onClick={onNewGame}

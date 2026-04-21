@@ -93,7 +93,10 @@ export default function ChessGame({
   }, [moves]);
 
   const gameRef = useRef(game);
-  gameRef.current = game;
+
+  useEffect(() => {
+    gameRef.current = game;
+  }, [game]);
 
   // Tracks whether the current game has already been recorded to prevent double-recording
   // when game over is detected AND the user then clicks "New Game".
@@ -157,8 +160,15 @@ export default function ChessGame({
       termination = "draw";
     }
 
-    onGameRecord({ white: whiteName, black: blackName, result, termination, moves: moves.length, complete: true });
-  }, [isGameOver]); // eslint-disable-line react-hooks/exhaustive-deps
+    onGameRecord({
+      white: whiteName,
+      black: blackName,
+      result,
+      termination,
+      moves: moves.length,
+      complete: true,
+    });
+  }, [blackName, game, isGameOver, moves.length, onGameRecord, whiteName]);
 
   const onMove = useCallback((from: Key, to: Key) => {
     const current = gameRef.current;
@@ -171,36 +181,42 @@ export default function ChessGame({
     const probe = new Chess(current.fen());
     const m = probe.move({ from, to });
     if (!m) return;
-    setMoves((prev) => [...prev, { from: m.from, to: m.to, promotion: m.promotion }]);
+    setMoves((prev) => [
+      ...prev,
+      { from: m.from, to: m.to, promotion: m.promotion },
+    ]);
     setLastMove([from, to]);
   }, []);
 
-  const handlePromotionSelect = useCallback((piece: PromotionPiece) => {
-    const pending = pendingPromotion;
-    if (!pending) return;
+  const handlePromotionSelect = useCallback(
+    (piece: PromotionPiece) => {
+      const pending = pendingPromotion;
+      if (!pending) return;
 
-    const current = gameRef.current;
-    const probe = new Chess(current.fen());
-    const move = probe.move({
-      from: pending.from,
-      to: pending.to,
-      promotion: piece,
-    });
+      const current = gameRef.current;
+      const probe = new Chess(current.fen());
+      const move = probe.move({
+        from: pending.from,
+        to: pending.to,
+        promotion: piece,
+      });
 
-    if (!move) {
+      if (!move) {
+        setPendingPromotion(null);
+        return;
+      }
+
+      setMoves((prev) => [
+        ...prev,
+        { from: move.from, to: move.to, promotion: move.promotion },
+      ]);
+      setLastMove([pending.from, pending.to]);
       setPendingPromotion(null);
-      return;
-    }
+    },
+    [pendingPromotion]
+  );
 
-    setMoves((prev) => [
-      ...prev,
-      { from: move.from, to: move.to, promotion: move.promotion },
-    ]);
-    setLastMove([pending.from, pending.to]);
-    setPendingPromotion(null);
-  }, [pendingPromotion]);
-
-  function recordAbandoned() {
+  const recordAbandoned = useCallback(() => {
     if (moves.length > 0 && !isGameOver && !recordedRef.current) {
       recordedRef.current = true;
       onGameRecord({
@@ -212,7 +228,7 @@ export default function ChessGame({
         complete: false,
       });
     }
-  }
+  }, [blackName, isGameOver, moves.length, onGameRecord, whiteName]);
 
   const handleReset = useCallback(() => {
     recordAbandoned();
@@ -220,16 +236,15 @@ export default function ChessGame({
     setPendingPromotion(null);
     setMoves([]);
     setLastMove(undefined);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [moves.length, isGameOver]);
+  }, [recordAbandoned]);
 
-  function handleReturnToSetup() {
+  const handleReturnToSetup = useCallback(() => {
     recordAbandoned();
     onReturnToSetup();
-  }
+  }, [onReturnToSetup, recordAbandoned]);
 
   return (
-    <div className="flex flex-col items-center gap-6 w-full max-w-[540px]">
+    <div className="flex w-full max-w-[540px] flex-col items-center gap-6">
       {pendingPromotion && (
         <PromotionModal
           color={pendingPromotion.color}
@@ -262,8 +277,12 @@ export default function ChessGame({
         isCheck={game.inCheck()}
       />
 
-      <div className="flex flex-col items-start gap-1 w-full">
-        <CapturedPieces pieces={capturedByBlack} pieceColor="w" name={blackName} />
+      <div className="flex w-full flex-col items-start gap-1">
+        <CapturedPieces
+          pieces={capturedByBlack}
+          pieceColor="w"
+          name={blackName}
+        />
         <ChessgroundBoard
           fen={game.fen()}
           turnColor={turnColor}
@@ -275,10 +294,14 @@ export default function ChessGame({
           pieceStyle={pieceStyle}
           disabled={Boolean(pendingPromotion)}
         />
-        <CapturedPieces pieces={capturedByWhite} pieceColor="b" name={whiteName} />
+        <CapturedPieces
+          pieces={capturedByWhite}
+          pieceColor="b"
+          name={whiteName}
+        />
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-center gap-3">
         <button onClick={handleReset} className={SECONDARY_BTN}>
           <span className="text-base leading-none" aria-hidden>↺</span>
           New Game

@@ -55,10 +55,10 @@ export default function GameShell() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col">
+    <div className="flex min-h-screen flex-col bg-slate-900">
       <AppNav onMenuOpen={() => setMenuOpen(true)} />
 
-      <main className="flex flex-1 items-center justify-center px-4 py-8 sm:p-8">
+      <main className="flex flex-1 items-start justify-center px-4 py-6 sm:px-6 sm:py-8 lg:py-10">
         {appState.screen === "setup" ? (
           <PlayerSetup
             onStart={handleStart}

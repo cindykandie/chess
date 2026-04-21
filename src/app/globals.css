@@ -12,9 +12,14 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html {
+  color-scheme: dark;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
+  min-width: 320px;
 }
 
 ::selection {
@@ -239,7 +244,7 @@ cg-board square.check {
  */
 
 /* Glyph content + pawn size — shared across all styles */
-.cg-wrap piece.pawn::before   { content: "♟"; font-size:6.8cqi; }
+.cg-wrap piece.pawn::before   { content: "♟"; font-size: 6.8cqi; }
 .cg-wrap piece.rook::before   { content: "♜"; }
 .cg-wrap piece.knight::before { content: "♞"; }
 .cg-wrap piece.bishop::before { content: "♝"; }

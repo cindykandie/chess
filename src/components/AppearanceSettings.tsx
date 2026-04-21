@@ -70,7 +70,7 @@ export default function AppearanceSettings({
     <>
       <div className={sectionClass}>
         <SectionLabel>Board Theme</SectionLabel>
-        <div className="mb-2 flex items-center gap-2.5">
+        <div className="mb-2 flex flex-wrap items-center gap-2.5">
           {BOARD_THEMES.map((theme) => (
             <Swatch
               key={theme.id}
@@ -88,7 +88,7 @@ export default function AppearanceSettings({
 
       <div className={sectionClass}>
         <SectionLabel>Piece Style</SectionLabel>
-        <div className="mb-2 flex items-center gap-2.5">
+        <div className="mb-2 flex flex-wrap items-center gap-2.5">
           {PIECE_STYLES.map((style) => (
             <Swatch
               key={style.id}

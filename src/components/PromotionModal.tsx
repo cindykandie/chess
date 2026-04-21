@@ -28,14 +28,14 @@ export default function PromotionModal({
       aria-modal="true"
       aria-labelledby="promotion-title"
     >
-      <div className="w-full max-w-sm rounded-lg border border-slate-700 bg-slate-950 p-5 text-center shadow-2xl shadow-black/50 ring-1 ring-white/10">
+      <div className="w-full max-w-sm rounded-lg border border-slate-700 bg-slate-950 p-4 text-center shadow-2xl shadow-black/50 ring-1 ring-white/10 sm:p-5">
         <p
           id="promotion-title"
           className="text-sm font-semibold uppercase tracking-[0.22em] text-emerald-300"
         >
           Promote pawn
         </p>
-        <div className="mt-5 grid grid-cols-2 gap-3">
+        <div className="mt-5 grid grid-cols-2 gap-2.5 sm:gap-3">
           {choices.map((piece) => (
             <button
               key={piece}
