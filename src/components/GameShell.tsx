@@ -20,7 +20,6 @@ type Players = { white: string; black: string };
 type AppState = {
   screen: "setup" | "game";
   players: Players;
-  theme: BoardTheme;
 };
 
 export default function GameShell() {
@@ -28,7 +27,6 @@ export default function GameShell() {
   const [appState, setAppState] = useState<AppState>({
     screen: "setup",
     players: { white: "", black: "" },
-    theme: DEFAULT_THEME,
   });
   const [history, setHistory] = useState<GameRecord[]>(() => loadHistory());
   const [menuOpen, setMenuOpen] = useState(false);
@@ -38,8 +36,8 @@ export default function GameShell() {
     saveSettings(settings);
   }, [settings]);
 
-  function handleStart(players: Players, theme: BoardTheme) {
-    setAppState({ screen: "game", players, theme });
+  function handleStart(players: Players) {
+    setAppState({ screen: "game", players });
   }
 
   function handleReturnToSetup() {

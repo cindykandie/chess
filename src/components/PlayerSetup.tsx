@@ -27,14 +27,10 @@ export default function PlayerSetup({
 }: PlayerSetupProps) {
   const [white, setWhite] = useState("");
   const [black, setBlack] = useState("");
-  const [theme, setTheme] = useState<BoardTheme>(initialTheme ?? DEFAULT_THEME);
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    onStart(
-      { white: white.trim() || "White", black: black.trim() || "Black" },
-      theme
-    );
+    onStart({ white: white.trim() || "White", black: black.trim() || "Black" });
   }
 
   return (
