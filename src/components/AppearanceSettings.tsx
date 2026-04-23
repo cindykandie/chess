@@ -36,8 +36,9 @@ function Swatch<T extends { id: string; name: string }>({
       title={item.name}
       aria-label={`${item.name}${selected ? " (selected)" : ""}`}
       onClick={onClick}
+      suppressHydrationWarning
       className={[
-        "h-8 w-8 rounded-full transition-all duration-150",
+        "h-10 w-10 rounded-full transition-all duration-150",
         "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40",
         selected
           ? "scale-110 ring-2 ring-white ring-offset-2 ring-offset-slate-900"

@@ -10,8 +10,8 @@ export default function TurnIndicator({ statusText, turn, isCheck }: TurnIndicat
   return (
     <div
       className={[
-        "inline-flex items-center gap-2.5 rounded-full px-4 py-1.5",
-        "text-sm font-medium select-none ring-1 transition-all duration-300",
+        "inline-flex items-center gap-2 rounded-full px-3 py-1.5 sm:px-4 sm:gap-2.5",
+        "text-xs font-medium select-none ring-1 transition-all duration-300 sm:text-sm",
         isCheck
           ? "bg-amber-950/60 text-amber-200 ring-amber-700/50"
           : isOver

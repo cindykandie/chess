@@ -35,8 +35,8 @@ export default function PlayerSetup({
 
   return (
     <div className="flex w-full max-w-md flex-col items-center">
-      <div className="mb-7 text-center">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-100">
+      <div className="mb-5 text-center sm:mb-7">
+        <h1 className="text-xl font-bold tracking-tight text-slate-100 sm:text-2xl">
           No-Ordinary Chess
         </h1>
         <p className="mt-1 text-[11px] font-medium tracking-widest uppercase text-slate-500">
@@ -112,7 +112,7 @@ export default function PlayerSetup({
           <button
             type="submit"
             className={[
-              "w-full rounded-lg px-4 py-3",
+              "w-full rounded-lg px-4 py-3 min-h-[44px]",
               "bg-emerald-700 text-sm font-semibold text-white",
               "shadow-[0_4px_16px_-4px_rgba(5,150,105,0.5)]",
               "transition-all duration-150 hover:bg-emerald-600",
