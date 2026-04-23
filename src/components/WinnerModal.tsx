@@ -34,7 +34,7 @@ export default function WinnerModal({
         </p>
         <h2
           id="winner-title"
-          className="mt-2 text-3xl font-black tracking-tight text-slate-50"
+          className="mt-2 text-2xl font-black tracking-tight text-slate-50 sm:text-3xl"
         >
           {label} wins
         </h2>
@@ -46,14 +46,14 @@ export default function WinnerModal({
           <button
             type="button"
             onClick={onNewGame}
-            className="rounded-lg bg-emerald-400 px-4 py-2 text-sm font-bold text-emerald-950 transition hover:bg-emerald-300 active:scale-[0.98]"
+            className="rounded-lg bg-emerald-400 px-5 py-2.5 min-h-[44px] text-sm font-bold text-emerald-950 transition hover:bg-emerald-300 active:scale-[0.98]"
           >
             New Game
           </button>
           <button
             type="button"
             onClick={onChangePlayers}
-            className="rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:bg-slate-800 active:scale-[0.98]"
+            className="rounded-lg border border-slate-700 bg-slate-900 px-5 py-2.5 min-h-[44px] text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:bg-slate-800 active:scale-[0.98]"
           >
             Change Players
           </button>

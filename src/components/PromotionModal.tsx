@@ -35,18 +35,18 @@ export default function PromotionModal({
         >
           Promote pawn
         </p>
-        <div className="mt-5 grid grid-cols-2 gap-2.5 sm:gap-3">
+        <div className="mt-4 grid grid-cols-4 gap-2 sm:grid-cols-2 sm:gap-3">
           {choices.map((piece) => (
             <button
               key={piece}
               type="button"
               onClick={() => onSelect(piece)}
-              className="flex min-h-24 flex-col items-center justify-center rounded-lg border border-slate-700 bg-slate-900 px-3 py-4 text-slate-100 transition hover:border-emerald-300 hover:bg-emerald-950/60 focus:outline-none focus:ring-2 focus:ring-emerald-300 active:scale-[0.98]"
+              className="flex min-h-[72px] flex-col items-center justify-center rounded-lg border border-slate-700 bg-slate-900 px-2 py-3 text-slate-100 transition hover:border-emerald-300 hover:bg-emerald-950/60 focus:outline-none focus:ring-2 focus:ring-emerald-300 active:scale-[0.98] sm:min-h-24 sm:px-3 sm:py-4"
             >
-              <span className="text-4xl leading-none" aria-hidden="true">
+              <span className="text-3xl leading-none sm:text-4xl" aria-hidden="true">
                 {PIECES[piece].glyph[color]}
               </span>
-              <span className="mt-2 text-sm font-semibold">
+              <span className="mt-1.5 text-xs font-semibold sm:text-sm">
                 {PIECES[piece].label}
               </span>
             </button>

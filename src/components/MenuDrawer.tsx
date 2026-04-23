@@ -74,7 +74,7 @@ export default function MenuDrawer({
           <button
             onClick={onClose}
             aria-label="Close menu"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors duration-150 hover:bg-slate-800 hover:text-slate-200"
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 transition-colors duration-150 hover:bg-slate-800 hover:text-slate-200"
           >
             <svg
               viewBox="0 0 20 20"
@@ -103,7 +103,7 @@ export default function MenuDrawer({
                   onNavigateHome();
                   onClose();
                 }}
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-300 transition-colors duration-150 hover:bg-slate-800 hover:text-slate-100"
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-3 min-h-[44px] text-sm text-slate-300 transition-colors duration-150 hover:bg-slate-800 hover:text-slate-100"
               >
                 <svg
                   viewBox="0 0 20 20"
@@ -134,7 +134,7 @@ export default function MenuDrawer({
               {history.length > 0 && (
                 <button
                   onClick={onClearHistory}
-                  className="text-[10px] font-medium text-slate-600 transition-colors duration-150 hover:text-slate-400"
+                  className="px-2 py-1 text-[10px] font-medium text-slate-600 transition-colors duration-150 hover:text-slate-400"
                 >
                   Clear
                 </button>

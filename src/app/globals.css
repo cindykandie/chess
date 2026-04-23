@@ -184,7 +184,7 @@ cg-board square.check {
 .board-coordinate-label {
   opacity: 1;
   font-family: var(--font-geist-sans), system-ui, sans-serif;
-  font-size: 10px;
+  font-size: clamp(8px, 1.8cqi, 11px);
   font-weight: 600;
   letter-spacing: 0;
   color: #020617;

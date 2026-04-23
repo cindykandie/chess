@@ -26,7 +26,7 @@ export default function AppNav({ onMenuOpen }: Props) {
       <button
         onClick={onMenuOpen}
         aria-label="Open menu"
-        className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition-colors duration-150 hover:bg-slate-800 hover:text-slate-200"
+        className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 transition-colors duration-150 hover:bg-slate-800 hover:text-slate-200"
       >
         <svg
           viewBox="0 0 20 20"

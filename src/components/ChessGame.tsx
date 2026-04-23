@@ -33,7 +33,7 @@ type PendingPromotion = {
 const PROMOTION_ORDER: PromotionPiece[] = ["q", "r", "b", "n"];
 
 const SECONDARY_BTN = [
-  "flex items-center gap-2 rounded-lg border px-4 py-2",
+  "flex items-center gap-2 rounded-lg border px-4 py-2.5 min-h-[44px]",
   "text-sm font-medium transition-all duration-150",
   "border-slate-700 bg-slate-800/50 text-slate-400",
   "hover:border-slate-600 hover:bg-slate-800 hover:text-slate-200",
@@ -245,7 +245,7 @@ export default function ChessGame({
   }, [onReturnToSetup, recordAbandoned]);
 
   return (
-    <div className="flex w-full max-w-[540px] flex-col items-center gap-6">
+    <div className="flex w-full max-w-[540px] flex-col items-center gap-3 sm:gap-6">
       {pendingPromotion && (
         <PromotionModal
           color={pendingPromotion.color}
@@ -264,7 +264,7 @@ export default function ChessGame({
       )}
 
       <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-100">
+        <h1 className="text-xl font-bold tracking-tight text-slate-100 sm:text-2xl">
           No-Ordinary Chess
         </h1>
         <p className="mt-1 text-[11px] font-medium tracking-widest uppercase text-slate-500">
@@ -302,7 +302,7 @@ export default function ChessGame({
         />
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-3">
+      <div className="flex w-full flex-wrap items-center justify-center gap-3">
         <button onClick={handleReset} className={SECONDARY_BTN}>
           <span className="text-base leading-none" aria-hidden>↺</span>
           New Game
